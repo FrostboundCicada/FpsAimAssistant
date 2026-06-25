@@ -58,17 +58,40 @@ jobs:
 
       - name: 下载 NCNN 预编译库（Android Vulkan）
         run: |
+          set -euo pipefail
           cd app/src/main/cpp
           if [ -d ncnn-android-vulkan ] && [ -f ncnn-android-vulkan/lib/arm64-v8a/libncnn.a ]; then
             echo "NCNN 已存在，跳过下载"
             exit 0
           fi
-          # NCNN 官方 release: ncnn-20240410-android-vulkan
-          wget -q https://github.com/Tencent/ncnn/releases/download/20240410/ncnn-20240410-android-vulkan.zip -O ncnn.zip
-          unzip -q ncnn.zip
-          mv ncnn-20240410-android-vulkan ncnn-android-vulkan
+          # 用 curl -L --fail 替代 wget -q（GitHub releases 重定向更稳定）
+          ZIP_URL="https://github.com/Tencent/ncnn/releases/download/20240410/ncnn-20240410-android-vulkan.zip"
+          echo "下载 NCNN: $ZIP_URL"
+          curl -L --fail --max-time 300 -o ncnn.zip "$ZIP_URL"
+          # 诊断：确认是 zip 而非 HTML 错误页
+          echo "文件类型: $(file ncnn.zip)"
+          echo "文件大小: $(du -h ncnn.zip | cut -f1)"
+          echo "ZIP 内容预览:"
+          unzip -l ncnn.zip | head -20
+          # 解压
+          unzip -o ncnn.zip
+          # NCNN zip 解压后目录名可能带版本号，用通配符定位
+          NCNN_DIR=$(find . -maxdepth 1 -type d -name 'ncnn*android*vulkan*' | head -1)
+          if [ -z "$NCNN_DIR" ]; then
+            echo "错误: 未找到解压后的 NCNN 目录"
+            ls -la
+            exit 1
+          fi
+          echo "找到 NCNN 目录: $NCNN_DIR"
+          mv "$NCNN_DIR" ncnn-android-vulkan
           rm ncnn.zip
-          ls ncnn-android-vulkan/lib/arm64-v8a/
+          # 验证 libncnn.a 存在
+          if [ ! -f ncnn-android-vulkan/lib/arm64-v8a/libncnn.a ]; then
+            echo "错误: libncnn.a 不存在"
+            find ncnn-android-vulkan/ -name "libncnn.a" || true
+            exit 1
+          fi
+          echo "NCNN 验证通过"
 
       - name: 构建调试版（验证编译）
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
