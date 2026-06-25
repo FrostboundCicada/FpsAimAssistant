@@ -1,0 +1,149 @@
+name: 清理发行版
+
+# 手动触发清理 GitHub Releases
+# 可选择保留最近 N 个版本，或清理指定天数前的版本，或全部清空
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '清理模式'
+        type: choice
+        options:
+          - keep_recent       # 保留最近 N 个，删除其余
+          - by_age            # 删除 N 天前的所有版本
+          - all               # 清空所有发行版
+          - drafts_only       # 仅清理草稿
+        default: keep_recent
+      keep_count:
+        description: 'keep_recent 模式下保留的版本数'
+        type: string
+        default: '5'
+      age_days:
+        description: 'by_age 模式下的天数阈值'
+        type: string
+        default: '30'
+      include_prerelease:
+        description: '是否同时清理预发布版本'
+        type: boolean
+        default: true
+      dry_run:
+        description: '试运行（只列出将删除的，不实际删除）'
+        type: boolean
+        default: true
+
+# 防止并发清理
+concurrency:
+  group: cleanup-releases
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: 清理 GitHub Releases
+    runs-on: ubuntu-latest
+    # 仅仓库管理员可触发（防止误删）
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 列出并清理 Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          MODE: ${{ github.event.inputs.mode }}
+          KEEP_COUNT: ${{ github.event.inputs.keep_count }}
+          AGE_DAYS: ${{ github.event.inputs.age_days }}
+          INCLUDE_PRE: ${{ github.event.inputs.include_prerelease }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          echo "=== 清理模式: $MODE ==="
+          echo "仓库: $REPO"
+          echo "试运行: $DRY_RUN"
+
+          # 获取所有 release（按创建时间降序）
+          releases_json=$(gh release list --repo "$REPO" --json name,tagName,isDraft,isPrerelease,createdAt --limit 200)
+          echo "$releases_json" | jq -r '.[] | "\(.createdAt)\t\(.tagName)\t\(.isDraft)\t\(.isPrerelease)"' | sort -r > /tmp/all_releases.txt
+
+          total=$(wc -l < /tmp/all_releases.txt)
+          echo "=== 共找到 $total 个发行版 ==="
+
+          > /tmp/to_delete.txt
+
+          case "$MODE" in
+            keep_recent)
+              echo "保留最近 $KEEP_COUNT 个，删除其余"
+              tail -n +$((KEEP_COUNT + 1)) /tmp/all_releases.txt > /tmp/to_delete.txt
+              ;;
+            by_age)
+              cutoff=$(date -u -d "$AGE_DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
+              echo "删除 $cutoff 之前的版本"
+              while IFS=$'\t' read -r created tag is_draft is_pre; do
+                if [[ "$created" < "$cutoff" ]]; then
+                  echo -e "${created}\t${tag}\t${is_draft}\t${is_pre}" >> /tmp/to_delete.txt
+                fi
+              done < /tmp/all_releases.txt
+              ;;
+            all)
+              echo "清空所有发行版"
+              cp /tmp/all_releases.txt /tmp/to_delete.txt
+              ;;
+            drafts_only)
+              echo "仅清理草稿"
+              while IFS=$'\t' read -r created tag is_draft is_pre; do
+                if [[ "$is_draft" == "true" ]]; then
+                  echo -e "${created}\t${tag}\t${is_draft}\t${is_pre}" >> /tmp/to_delete.txt
+                fi
+              done < /tmp/all_releases.txt
+              ;;
+          esac
+
+          # 过滤预发布
+          if [[ "$INCLUDE_PRE" != "true" ]]; then
+            grep -v $'\ttrue$' /tmp/to_delete.txt > /tmp/filtered.txt || true
+            mv /tmp/filtered.txt /tmp/to_delete.txt
+          fi
+
+          del_count=$(wc -l < /tmp/to_delete.txt)
+          echo ""
+          echo "=== 将删除 $del_count 个发行版 ==="
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "[试运行] 以下版本将被删除（实际未删除）:"
+            awk -F'\t' '{printf "  - %s (%s)\n", $2, $1}' /tmp/to_delete.txt
+            echo ""
+            echo "如需实际删除，请重新运行并将 dry_run 设为 false"
+            exit 0
+          fi
+
+          # 实际删除
+          deleted=0
+          while IFS=$'\t' read -r created tag is_draft is_pre; do
+            [[ -z "$tag" ]] && continue
+            echo "删除: $tag"
+            if gh release delete "$tag" --repo "$REPO" --yes --cleanup-tag 2>/dev/null; then
+              deleted=$((deleted + 1))
+            else
+              echo "  警告: 删除 $tag 失败"
+            fi
+          done < /tmp/to_delete.txt
+
+          echo ""
+          echo "=== 清理完成: 实际删除 $deleted 个发行版 ==="
+
+      - name: 输出清理摘要
+        run: |
+          echo "## 清理摘要" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 模式: ${{ github.event.inputs.mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 试运行: ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 仓库: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.event.inputs.mode }}" == "keep_recent" ]]; then
+            echo "- 保留数量: ${{ github.event.inputs.keep_count }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [[ "${{ github.event.inputs.mode }}" == "by_age" ]]; then
+            echo "- 天数阈值: ${{ github.event.inputs.age_days }}" >> $GITHUB_STEP_SUMMARY
+          fi

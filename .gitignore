@@ -1,0 +1,33 @@
+# Gradle
+.gradle/
+build/
+app/build/
+.cxx/
+local.properties
+
+# Native build
+*.o
+*.so
+*.a
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keystore
+*.jks
+*.keystore
+
+# APK/AAB（构建产物不入库）
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# 日志
+*.log

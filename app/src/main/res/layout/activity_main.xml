@@ -58,16 +58,10 @@
             android:orientation="vertical">
 
             <RadioButton
-                android:id="@+id/rbInjectAuto"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="自动探测（TwT→内核驱动→陀螺仪→uinput）" />
-
-            <RadioButton
                 android:id="@+id/rbInjectTwt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:checked="true"
                 android:text="TwT 驱动（syscall+ioctl，支持陀螺仪直改，最难检测）" />
 
             <RadioButton
