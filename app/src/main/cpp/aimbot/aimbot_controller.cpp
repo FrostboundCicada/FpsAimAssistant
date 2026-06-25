@@ -129,19 +129,37 @@ void AimbotController::aimOnce(float aim_x, float aim_y) {
 
     ensureSeeded();
 
-    float perp_x = -dy / (dist + 0.001f);
-    float perp_y =  dx / (dist + 0.001f);
-    float arc_sign = (rand() % 2 == 0) ? 1.f : -1.f;
-    float arc_amp = dist * (0.1f + (rand() % 20) / 100.f);
-    float cx1 = aim_x + dx * 0.33f + perp_x * arc_amp * arc_sign;
-    float cy1 = aim_y + dy * 0.33f + perp_y * arc_amp * arc_sign;
-    float cx2 = aim_x + dx * 0.66f + perp_x * arc_amp * arc_sign * 0.5f;
-    float cy2 = aim_y + dy * 0.66f + perp_y * arc_amp * arc_sign * 0.5f;
+    // 触摸后端灵敏度: X/Y 分别缩放目标偏移，使 X/Y 滑块独立生效
+    // sens>1 -> 偏移放大 -> 单次注入移动更远 -> 更快接近目标
+    // sens<1 -> 偏移缩小 -> 移动更平缓
+    float eff_dx = dx * cfg_.sens_x;
+    float eff_dy = dy * cfg_.sens_y;
+    float eff_dist = sqrtf(eff_dx * eff_dx + eff_dy * eff_dy);
+    // 限制单次注入最大位移，避免灵敏度过高导致瞬移被检测
+    float max_step = dist;  // 不超过真实目标距离
+    if (eff_dist > max_step && eff_dist > 0.001f) {
+        float scale = max_step / eff_dist;
+        eff_dx *= scale;
+        eff_dy *= scale;
+        eff_dist = max_step;
+    }
+    // 实际注入目标点（朝目标方向前进 eff_dist，未到则下次继续）
+    float inject_tx = aim_x + eff_dx;
+    float inject_ty = aim_y + eff_dy;
 
-    int steps = 8 + (int)(dist / 50.f);
-    // 灵敏度越高 -> 步数越少 -> 移动越快（触摸后端用 x/y 平均值）
-    float sens_avg = (cfg_.sens_x + cfg_.sens_y) * 0.5f;
-    if (sens_avg > 0.01f) steps = (int)(steps / sens_avg);
+    float perp_x = -eff_dy / (eff_dist + 0.001f);
+    float perp_y =  eff_dx / (eff_dist + 0.001f);
+    float arc_sign = (rand() % 2 == 0) ? 1.f : -1.f;
+    float arc_amp = eff_dist * (0.1f + (rand() % 20) / 100.f);
+    float cx1 = aim_x + eff_dx * 0.33f + perp_x * arc_amp * arc_sign;
+    float cy1 = aim_y + eff_dy * 0.33f + perp_y * arc_amp * arc_sign;
+    float cx2 = aim_x + eff_dx * 0.66f + perp_x * arc_amp * arc_sign * 0.5f;
+    float cy2 = aim_y + eff_dy * 0.66f + perp_y * arc_amp * arc_sign * 0.5f;
+
+    // 步数: aim_speed 越高 -> 步数越少 -> 移动越快（修复触摸后端速度滑块不生效）
+    int steps = 8 + (int)(eff_dist / 50.f);
+    float speed_factor = computeDynamicSpeed(eff_dist);  // 复用动态速度（含 aim_speed）
+    if (speed_factor > 0.01f) steps = (int)(steps / speed_factor);
     if (steps > 20) steps = 20;
     if (steps < 6) steps = 6;
 
@@ -149,8 +167,8 @@ void AimbotController::aimOnce(float aim_x, float aim_y) {
     float overshoot_x = 0.f, overshoot_y = 0.f;
     if (overshoot) {
         float os = 2.f + (rand() % 6);
-        overshoot_x = (dx / (dist + 0.001f)) * os;
-        overshoot_y = (dy / (dist + 0.001f)) * os;
+        overshoot_x = (eff_dx / (eff_dist + 0.001f)) * os;
+        overshoot_y = (eff_dy / (eff_dist + 0.001f)) * os;
     }
 
     float sx = aim_x, sy = aim_y;
@@ -160,8 +178,8 @@ void AimbotController::aimOnce(float aim_x, float aim_y) {
     for (int i = 1; i <= steps; ++i) {
         float t_norm = (float)i / steps;
         float eased = easeInOut(t_norm);
-        sx = bezier3(aim_x, cx1, cx2, tx, eased);
-        sy = bezier3(aim_y, cy1, cy2, ty, eased);
+        sx = bezier3(aim_x, cx1, cx2, inject_tx, eased);
+        sy = bezier3(aim_y, cy1, cy2, inject_ty, eased);
         if (overshoot && i == steps) {
             sx += overshoot_x;
             sy += overshoot_y;
@@ -176,8 +194,8 @@ void AimbotController::aimOnce(float aim_x, float aim_y) {
         usleep(1000 + (rand() % 2000));
         for (int i = 1; i <= 3; ++i) {
             float t = (float)i / 3.f;
-            float bx = (tx + overshoot_x) * (1.f - t) + tx * t;
-            float by = (ty + overshoot_y) * (1.f - t) + ty * t;
+            float bx = (inject_tx + overshoot_x) * (1.f - t) + inject_tx * t;
+            float by = (inject_ty + overshoot_y) * (1.f - t) + inject_ty * t;
             injector_.touchMove((int)bx, (int)by);
             usleep(600 + (rand() % 800));
         }
@@ -186,8 +204,8 @@ void AimbotController::aimOnce(float aim_x, float aim_y) {
     if (rand() % 100 < 20) usleep(1500 + (rand() % 2000));
     injector_.touchUp();
     injecting_ = false;
-    LOGI("触摸注入: (%.0f,%.0f)->(%.0f,%.0f) dist=%.0f steps=%d",
-         aim_x, aim_y, tx, ty, dist, steps);
+    LOGI("触摸注入: (%.0f,%.0f)->(%.0f,%.0f) dist=%.0f eff=%.0f steps=%d sens=%.2f/%.2f",
+         aim_x, aim_y, inject_tx, inject_ty, dist, eff_dist, steps, cfg_.sens_x, cfg_.sens_y);
 }
 
 // ── 陀螺仪注入: 持续微调 ──────────────────────────────

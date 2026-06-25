@@ -81,6 +81,9 @@ class AimService : Service() {
     @Volatile private var sensY: Float = 1.0f
     @Volatile private var aimRadius: Float = 400f
     @Volatile private var aimSpeed: Float = 0.35f
+    // 检测范围（屏幕中心矩形，宽/高占屏幕比例 0.1~1.0，1.0=全屏）
+    @Volatile private var rangeWRatio: Float = 1.0f
+    @Volatile private var rangeHRatio: Float = 1.0f
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -156,6 +159,11 @@ class AimService : Service() {
                     this@AimService.aimSpeed = aimSpeed
                     // 灵敏度/半径/速度下发到 native（线程安全）
                     NativeBridge.nativeSetRuntimeParams(sensX, sensY, aimRadius, aimSpeed)
+                }
+                override fun onDetectionRangeChanged(wRatio: Float, hRatio: Float, visible: Boolean) {
+                    rangeWRatio = wRatio
+                    rangeHRatio = hRatio
+                    // 可视化已由 OverlayManager 直接处理，这里仅记录比例用于目标过滤
                 }
                 override fun onExit() {
                     Log.i(TAG, "用户请求退出")
@@ -312,6 +320,11 @@ class AimService : Service() {
             var bestDist = Float.MAX_VALUE
             val cx = width / 2f
             val cy = height / 2f
+            // 检测范围矩形边界（屏幕中心，按比例缩放），范围外的目标不参与瞄准
+            val rangeLeft = cx - width * rangeWRatio / 2f
+            val rangeRight = cx + width * rangeWRatio / 2f
+            val rangeTop = cy - height * rangeHRatio / 2f
+            val rangeBottom = cy + height * rangeHRatio / 2f
             val n = dets.size / 6
             for (i in 0 until n) {
                 val base = i * 6
@@ -320,8 +333,13 @@ class AimService : Service() {
                 val conf = dets[base + 4]; val cls = dets[base + 5].toInt()
                 val bcx = (x1 + x2) / 2f
                 val bcy = (y1 + y2) / 2f
-                val d = (bcx - cx) * (bcx - cx) + (bcy - cy) * (bcy - cy)
-                if (d < bestDist) { bestDist = d; bestIdx = i }
+                // 仅当检测框中心落在检测范围内才作为瞄准候选
+                val inRange = bcx >= rangeLeft && bcx <= rangeRight &&
+                              bcy >= rangeTop && bcy <= rangeBottom
+                if (inRange) {
+                    val d = (bcx - cx) * (bcx - cx) + (bcy - cy) * (bcy - cy)
+                    if (d < bestDist) { bestDist = d; bestIdx = i }
+                }
                 boxes.add(OverlayManager.Box(x1, y1, x2, y2, conf, cls, false))
             }
             if (bestIdx in boxes.indices) {

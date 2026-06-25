@@ -50,6 +50,8 @@ class OverlayManager(private val context: Context) {
         /** 运行时参数被调节（置信度/灵敏度/半径/速度）。 */
         fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
                             aimRadius: Float, aimSpeed: Float)
+        /** 检测范围被调节（宽/高占屏幕比例 0.0~1.0，是否显示）。 */
+        fun onDetectionRangeChanged(wRatio: Float, hRatio: Float, visible: Boolean)
         /** 请求退出服务。 */
         fun onExit()
     }
@@ -64,6 +66,10 @@ class OverlayManager(private val context: Context) {
     @Volatile private var currentModelName: String = "—"
     @Volatile private var currentBackendName: String = "—"
     @Volatile private var driverReport: DriverProbe.Report? = null
+    // 检测范围（屏幕中心矩形比例 + 是否显示）
+    @Volatile private var rangeWRatio: Float = 1.0f
+    @Volatile private var rangeHRatio: Float = 1.0f
+    @Volatile private var rangeVisible: Boolean = true
 
     fun show() {
         if (overlayView == null) {
@@ -80,6 +86,8 @@ class OverlayManager(private val context: Context) {
             params.gravity = Gravity.TOP or Gravity.START
             windowManager.addView(view, params)
             overlayView = view
+            // 应用初始检测范围
+            view.setDetectionRange(rangeWRatio, rangeHRatio, rangeVisible)
         }
         if (controlView == null) {
             val view = ControlPanelView(context)
@@ -100,6 +108,13 @@ class OverlayManager(private val context: Context) {
                 override fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
                                             aimRadius: Float, aimSpeed: Float) {
                     listener?.onParamsChanged(confThresh, sensX, sensY, aimRadius, aimSpeed)
+                }
+                override fun onDetectionRangeChanged(wRatio: Float, hRatio: Float, visible: Boolean) {
+                    rangeWRatio = wRatio
+                    rangeHRatio = hRatio
+                    rangeVisible = visible
+                    overlayView?.setDetectionRange(wRatio, hRatio, visible)
+                    listener?.onDetectionRangeChanged(wRatio, hRatio, visible)
                 }
                 override fun onExit() {
                     listener?.onExit()
@@ -161,6 +176,14 @@ class OverlayManager(private val context: Context) {
         driverReport = report
         controlView?.updateDriver(report)
     }
+
+    /** 设置检测范围（宽/高占屏幕比例 0.0~1.0）及是否显示。 */
+    fun setDetectionRange(wRatio: Float, hRatio: Float, visible: Boolean) {
+        rangeWRatio = wRatio.coerceIn(0.1f, 1.0f)
+        rangeHRatio = hRatio.coerceIn(0.1f, 1.0f)
+        rangeVisible = visible
+        overlayView?.setDetectionRange(rangeWRatio, rangeHRatio, visible)
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -172,6 +195,10 @@ private class OverlayView(context: Context) : View(context) {
     @Volatile private var fps: Float = 0f
     @Volatile private var inferenceMs: Float = 0f
     @Volatile private var testMode: Boolean = false
+    // 检测范围（屏幕中心矩形，宽/高占屏幕比例 0.0~1.0，1.0=全屏）
+    @Volatile private var rangeWRatio: Float = 1.0f
+    @Volatile private var rangeHRatio: Float = 1.0f
+    @Volatile private var rangeVisible: Boolean = true
 
     private val boxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#39FF14")  // 荧光绿
@@ -205,9 +232,28 @@ private class OverlayView(context: Context) : View(context) {
         color = Color.parseColor("#FFFF00")
         strokeWidth = 2f
     }
+    private val rangePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#00E5FF")  // 荧光青
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+        // 虚线效果
+        pathEffect = android.graphics.DashPathEffect(floatArrayOf(12f, 8f), 0f)
+    }
+    private val rangeFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(0x14, 0x00, 0xE5, 0xFF)  // 极淡青色填充
+        style = Paint.Style.FILL
+    }
 
     fun setTestMode(enabled: Boolean) {
         testMode = enabled
+        postInvalidate()
+    }
+
+    /** 设置检测范围（宽/高占屏幕比例 0.0~1.0）及是否显示。 */
+    fun setDetectionRange(wRatio: Float, hRatio: Float, visible: Boolean) {
+        rangeWRatio = wRatio.coerceIn(0.1f, 1.0f)
+        rangeHRatio = hRatio.coerceIn(0.1f, 1.0f)
+        rangeVisible = visible
         postInvalidate()
     }
 
@@ -223,6 +269,28 @@ private class OverlayView(context: Context) : View(context) {
         super.onDraw(canvas)
         val screenCx = width / 2f
         val screenTopY = 0f
+
+        // 检测范围矩形（屏幕中心，按宽高百分比）
+        if (rangeVisible) {
+            val rw = width * rangeWRatio
+            val rh = height * rangeHRatio
+            val left = screenCx - rw / 2f
+            val top = (height / 2f) - rh / 2f
+            val right = screenCx + rw / 2f
+            val bottom = (height / 2f) + rh / 2f
+            canvas.drawRect(left, top, right, bottom, rangeFillPaint)
+            canvas.drawRect(left, top, right, bottom, rangePaint)
+            // 四角标记，便于辨认边界
+            val cornerLen = 24f
+            canvas.drawLine(left, top, left + cornerLen, top, selPaint)
+            canvas.drawLine(left, top, left, top + cornerLen, selPaint)
+            canvas.drawLine(right, top, right - cornerLen, top, selPaint)
+            canvas.drawLine(right, top, right, top + cornerLen, selPaint)
+            canvas.drawLine(left, bottom, left + cornerLen, bottom, selPaint)
+            canvas.drawLine(left, bottom, left, bottom - cornerLen, selPaint)
+            canvas.drawLine(right, bottom, right - cornerLen, bottom, selPaint)
+            canvas.drawLine(right, bottom, right, bottom - cornerLen, selPaint)
+        }
 
         // 检测框
         for (b in boxes) {
@@ -268,6 +336,7 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
         fun onCycleModel(): String?
         fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
                             aimRadius: Float, aimSpeed: Float)
+        fun onDetectionRangeChanged(wRatio: Float, hRatio: Float, visible: Boolean)
         fun onExit()
     }
 
@@ -281,6 +350,9 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
     private val exitBtn: Button
     private val paramsToggle: Button
     private val paramsContainer: LinearLayout
+    private val rangeToggle: Button
+    private val rangeContainer: LinearLayout
+    private val rangeVisibleSwitch: SwitchCompat
 
     // 当前参数值（与 AimService 默认值一致）
     private var pConfThresh = 0.45f
@@ -288,6 +360,10 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
     private var pSensY = 1.0f
     private var pAimRadius = 400f
     private var pAimSpeed = 0.35f
+    // 检测范围（宽/高占屏幕比例 0.1~1.0，默认全屏）
+    private var pRangeW = 1.0f
+    private var pRangeH = 1.0f
+    private var pRangeVisible = true
 
     init {
         orientation = VERTICAL
@@ -393,6 +469,61 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
         }
         addView(paramsContainer)
 
+        // 检测范围折叠区（屏幕中心矩形，可调宽高、可隐藏）
+        rangeToggle = Button(context).apply {
+            text = "▶ 检测范围"
+            setOnClickListener {
+                val visible = rangeContainer.visibility != View.VISIBLE
+                rangeContainer.visibility = if (visible) View.VISIBLE else View.GONE
+                text = if (visible) "▼ 检测范围" else "▶ 检测范围"
+            }
+            textSize = 12f
+            setBackgroundColor(Color.TRANSPARENT)
+            setTextColor(Color.parseColor("#00E5FF"))
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
+                topMargin = 4
+            }
+        }
+        addView(rangeToggle)
+
+        rangeContainer = LinearLayout(context).apply {
+            orientation = VERTICAL
+            visibility = View.GONE  // 默认折叠
+            setPadding(4, 4, 4, 4)
+        }
+        // 显示开关行
+        val rangeVisRow = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val rangeVisLabel = TextView(context).apply {
+            text = "屏幕显示范围框"
+            setTextColor(Color.WHITE)
+            textSize = 12f
+            layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
+        }
+        rangeVisibleSwitch = SwitchCompat(context).apply {
+            isChecked = pRangeVisible
+            setOnCheckedChangeListener { _, isChecked ->
+                pRangeVisible = isChecked
+                notifyRangeChanged()
+            }
+        }
+        rangeVisRow.addView(rangeVisLabel)
+        rangeVisRow.addView(rangeVisibleSwitch)
+        rangeContainer.addView(rangeVisRow)
+        // 宽度比例: 10%~100% (progress 10~100, /100)
+        addRangeSlider("范围宽度", 10, 100, (pRangeW * 100).toInt()) { progress ->
+            pRangeW = progress / 100f
+            notifyRangeChanged()
+        }
+        // 高度比例: 10%~100%
+        addRangeSlider("范围高度", 10, 100, (pRangeH * 100).toInt()) { progress ->
+            pRangeH = progress / 100f
+            notifyRangeChanged()
+        }
+        addView(rangeContainer)
+
         // 模型切换按钮
         modelBtn = Button(context).apply {
             text = "模型: —"
@@ -483,12 +614,68 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
             "置信度" -> "%.2f".format(progress / 100f)
             "X灵敏度", "Y灵敏度", "瞄准速度" -> "%.2f".format(progress / 100f)
             "瞄准半径" -> "$progress"
+            "范围宽度", "范围高度" -> "${progress}%"
             else -> progress.toString()
         }
     }
 
     private fun notifyParamsChanged() {
         listener?.onParamsChanged(pConfThresh, pSensX, pSensY, pAimRadius, pAimSpeed)
+    }
+
+    /** 添加检测范围滑块（结构与 addParamSlider 相同，但加入 rangeContainer）。 */
+    private fun addRangeSlider(
+        label: String, min: Int, max: Int, default: Int,
+        onChange: (progress: Int) -> Unit
+    ) {
+        val row = LinearLayout(context).apply {
+            orientation = VERTICAL
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
+                topMargin = 6
+            }
+        }
+        val labelRow = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val labelText = TextView(context).apply {
+            text = label
+            setTextColor(Color.parseColor("#E0E0E0"))
+            textSize = 11f
+            layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val valueText = TextView(context).apply {
+            text = formatSliderValue(label, default)
+            setTextColor(Color.parseColor("#00E5FF"))
+            textSize = 11f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        labelRow.addView(labelText)
+        labelRow.addView(valueText)
+        row.addView(labelRow)
+
+        val seekBar = SeekBar(context).apply {
+            this.max = max - min
+            progress = default - min
+            layoutParams = LayoutParams(240, LayoutParams.WRAP_CONTENT)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                    if (fromUser) {
+                        val realProgress = p + min
+                        valueText.text = formatSliderValue(label, realProgress)
+                        onChange(realProgress)
+                    }
+                }
+                override fun onStartTrackingTouch(sb: SeekBar?) {}
+                override fun onStopTrackingTouch(sb: SeekBar?) {}
+            })
+        }
+        row.addView(seekBar)
+        rangeContainer.addView(row)
+    }
+
+    private fun notifyRangeChanged() {
+        listener?.onDetectionRangeChanged(pRangeW, pRangeH, pRangeVisible)
     }
 
     private fun createPanelBg(): android.graphics.drawable.Drawable {
