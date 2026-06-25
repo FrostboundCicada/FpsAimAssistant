@@ -177,7 +177,7 @@ class SurfaceControlCapture(private val context: Context) : FrameCapture {
         }
     }
 
-    fun stop() {
+    override fun stop() {
         pollJob?.cancel()
         scope?.cancel()
         scope = null
