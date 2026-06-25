@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <unistd.h>          // getpid, usleep
 #include <android/log.h>
 
 #define LOG_TAG "aimbot_controller"

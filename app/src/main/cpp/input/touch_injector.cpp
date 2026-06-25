@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
+#include <sys/syscall.h>   // __NR_reboot
 #include <dirent.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>

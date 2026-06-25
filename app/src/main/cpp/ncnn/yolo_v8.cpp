@@ -9,9 +9,9 @@
 //   6. 坐标映射回原图尺度
 #include "yolo_v8.h"
 
-#include "net.h"
-#include "mat.h"
-#include "gpu.h"
+#include "ncnn/net.h"
+#include "ncnn/mat.h"
+#include "ncnn/gpu.h"
 
 #include <algorithm>
 #include <cmath>
