@@ -59,6 +59,7 @@ TouchInjector::~TouchInjector() { destroy(); }
 
 bool TouchInjector::isReady() const {
     if (backend_ == InjectBackend::GYROSCOPE) return gyro_fd_ >= 0;
+    if (backend_ == InjectBackend::TWT_DRIVER) return fd_ >= 0;
     return fd_ >= 0;
 }
 
@@ -67,6 +68,7 @@ std::string TouchInjector::backendName() const {
     case InjectBackend::UINPUT:       return "uinput (加固伪装)";
     case InjectBackend::KERNEL_DRIVER: return "内核驱动 (input_handle_event)";
     case InjectBackend::GYROSCOPE:   return "陀螺仪注入";
+    case InjectBackend::TWT_DRIVER:  return "TwT 驱动 (syscall+ioctl)";
     default: return "无";
     }
 }
@@ -111,6 +113,7 @@ InjectBackend TouchInjector::init(int screen_width, int screen_height,
         bool ok = false;
         switch (preferred) {
         case InjectBackend::KERNEL_DRIVER: ok = initKernelDriver(screen_width, screen_height); break;
+        case InjectBackend::TWT_DRIVER:    ok = initTwtDriver(screen_width, screen_height); break;
         case InjectBackend::GYROSCOPE:     ok = initGyroscope(screen_width, screen_height); break;
         case InjectBackend::UINPUT:       ok = initUinput(screen_width, screen_height); break;
         default: break;
@@ -122,7 +125,12 @@ InjectBackend TouchInjector::init(int screen_width, int screen_height,
         LOGW("指定后端 %d 失败，尝试自动探测", (int)preferred);
     }
 
-    // 自动探测顺序: 内核驱动 -> 陀螺仪 -> uinput
+    // 自动探测顺序: TwT -> 内核驱动 -> 陀螺仪 -> uinput
+    // TwT 最优先（内核 syscall + 直接改陀螺仪值，最难检测）
+    if (initTwtDriver(screen_width, screen_height)) {
+        LOGI("自动选择: TwT 驱动");
+        return backend_;
+    }
     if (initKernelDriver(screen_width, screen_height)) {
         LOGI("自动选择: 内核驱动");
         return backend_;
@@ -180,6 +188,138 @@ int TouchInjector::openKnownDriver() {
         }
     }
     return -1;
+}
+
+// ── TwT 驱动后端 ──────────────────────────────────────
+// TwT 通过两种方式获取 fd:
+//   1. syscall(__NR_reboot) — 内核 hook reboot 系统调用，返回驱动 fd
+//   2. /proc/self/fd 查找 anon_inode 中含 "TwT_driver" 的 fd
+//
+// TwT 接口（参考对接 v1.45）:
+//   TOUCH_INIT(slot_mode)  — 初始化触摸（mode 0/1）
+//   TOUCH_DOWN(slot,x,y)  — 触摸按下
+//   TOUCH_UP(slot)        — 触摸抬起
+//   GYRO_INIT(method)     — 初始化陀螺仪（method 0/1，0 已被特征）
+//   GYRO_CONFIG(enable,x,y) — 修改陀螺仪值（直接改传感器，非注入事件）
+
+#define TWT_MARK 'T'
+struct twt_touch_event { int slot; int x; int y; };
+struct twt_gyro_config { uint32_t enable; uint32_t x; uint32_t y; };
+#define TWT_TOUCH_INIT _IOW(TWT_MARK, 6, struct twt_touch_event)
+#define TWT_TOUCH_DOWN _IOW(TWT_MARK, 7, struct twt_touch_event)
+#define TWT_TOUCH_UP   _IOW(TWT_MARK, 8, struct twt_touch_event)
+#define TWT_GYRO_INIT  _IOW(TWT_MARK, 9, int)
+#define TWT_GYRO_CONFIG _IOWR(TWT_MARK, 10, struct twt_gyro_config)
+
+// 通过 /proc/self/fd 查找 TwT_driver 的 anon_inode fd
+int TouchInjector::findTwtFd() {
+    DIR* dir = opendir("/proc/self/fd");
+    if (!dir) return -1;
+
+    int found_fd = -1;
+    struct dirent* entry;
+    char path[64], link[256];
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue;
+        snprintf(path, sizeof(path), "/proc/self/fd/%s", entry->d_name);
+        ssize_t len = readlink(path, link, sizeof(link) - 1);
+        if (len < 0) continue;
+        link[len] = '\0';
+        // TwT 的 fd 是 anon_inode 且链接名含 "TwT_driver"
+        if (strstr(link, "TwT_driver") != nullptr && strstr(link, "anon_inode:") != nullptr) {
+            found_fd = atoi(entry->d_name);
+            break;
+        }
+    }
+    closedir(dir);
+    return found_fd;
+}
+
+// 通过 syscall(__NR_reboot) 获取 TwT fd
+// TwT 内核模块 hook 了 reboot 系统调用，特定 magic 值会返回驱动 fd
+int TouchInjector::syscallTwtFd() {
+#ifdef __aarch64__
+    // TwT 的 magic: 0x114514, 0x1919810, cmd 0x2778
+    // 使用内联汇编直接 syscall（参考 kernel.h 的 MY_CALL 宏）
+    long ret;
+    register long _x0 __asm__("x0") = 0x114514;
+    register long _x1 __asm__("x1") = 0x1919810;
+    register long _x2 __asm__("x2") = 0x2778;
+    register long _x3 __asm__("x3") = (long)&ret;
+    register long _x8 __asm__("x8") = __NR_reboot;  // syscall number
+    __asm__ __volatile__(
+        "svc #0"
+        : "=r"(_x0)
+        : "r"(_x0), "r"(_x1), "r"(_x2), "r"(_x3), "r"(_x8)
+        : "memory", "cc"
+    );
+    // 返回值在 _x0，但 TwT 把 fd 写入 _x3 指向的地址
+    return (int)ret;
+#else
+    return -1;
+#endif
+}
+
+bool TouchInjector::twtTouchInit(int mode) {
+    if (fd_ < 0) return false;
+    struct twt_touch_event teb = {};
+    teb.slot = mode;  // 0=方案一, 1=方案二
+    if (ioctl(fd_, TWT_TOUCH_INIT, &teb) != 0) {
+        if (errno == EALREADY) {
+            LOGI("TwT 触摸已开启，模式: %d", teb.slot);
+            return true;
+        }
+        last_error_ = std::string("TwT TOUCH_INIT 失败: ") + strerror(errno);
+        return false;
+    }
+    return true;
+}
+
+bool TouchInjector::twtGyroInit(int method) {
+    if (fd_ < 0) return false;
+    int m = method;
+    if (ioctl(fd_, TWT_GYRO_INIT, &m) != 0) {
+        if (errno == EALREADY) {
+            LOGI("TwT 陀螺仪已开启，模式: %d", m);
+            return true;
+        }
+        last_error_ = std::string("TwT GYRO_INIT 失败: ") + strerror(errno);
+        return false;
+    }
+    return true;
+}
+
+bool TouchInjector::initTwtDriver(int /*sw*/, int /*sh*/) {
+    // 方式1: 通过 syscall 获取 fd（TwT 内核 hook reboot）
+    fd_ = syscallTwtFd();
+    if (fd_ < 0) {
+        // 方式2: 通过 /proc/self/fd 查找
+        fd_ = findTwtFd();
+    }
+    if (fd_ < 0) {
+        last_error_ = "未检测到 TwT 驱动";
+        return false;
+    }
+
+    LOGI("TwT 驱动 fd 获取成功: %d", fd_);
+
+    // 初始化触摸（方案二，兼容性更好；方案一已被部分游戏特征）
+    if (!twtTouchInit(1)) {
+        LOGW("TwT 触摸方案二失败，尝试方案一");
+        if (!twtTouchInit(0)) {
+            LOGW("TwT 触摸初始化失败，仅使用陀螺仪");
+        }
+    }
+
+    // 初始化陀螺仪（方案二，方案一已被特征）
+    if (!twtGyroInit(1)) {
+        LOGW("TwT 陀螺仪方案二失败");
+    }
+
+    backend_ = InjectBackend::TWT_DRIVER;
+    state_ = TouchState::UP;
+    return true;
 }
 
 bool TouchInjector::initKernelDriver(int sw, int sh) {
@@ -357,6 +497,17 @@ bool TouchInjector::touchDown(int x, int y) {
     int pressure = randomPressure();
     int touch_major = randomTouchMajor();
 
+    if (backend_ == InjectBackend::TWT_DRIVER) {
+        // TwT: TOUCH_DOWN(slot, x, y)
+        struct twt_touch_event teb = { 0, x, y };
+        if (ioctl(fd_, TWT_TOUCH_DOWN, &teb) < 0) {
+            last_error_ = std::string("TwT TOUCH_DOWN 失败: ") + strerror(errno);
+            return false;
+        }
+        state_ = TouchState::DOWN;
+        return true;
+    }
+
     if (backend_ == InjectBackend::KERNEL_DRIVER) {
         struct aim_touch_point pt = { x, y, pressure, touch_major, tracking_id_ };
         if (ioctl(fd_, AIM_TOUCH_DOWN, &pt) < 0) {
@@ -390,6 +541,13 @@ bool TouchInjector::touchMove(int x, int y) {
     applyMicroJitter(x, y, 1);
     int pressure = randomPressure();
 
+    if (backend_ == InjectBackend::TWT_DRIVER) {
+        // TwT: 移动用 TOUCH_DOWN 持续报送（TwT 接口设计）
+        struct twt_touch_event teb = { 0, x, y };
+        if (ioctl(fd_, TWT_TOUCH_DOWN, &teb) < 0) return false;
+        return true;
+    }
+
     if (backend_ == InjectBackend::KERNEL_DRIVER) {
         struct aim_touch_point pt = { x, y, pressure, randomTouchMajor(), tracking_id_ };
         if (ioctl(fd_, AIM_TOUCH_MOVE, &pt) < 0) return false;
@@ -407,6 +565,13 @@ bool TouchInjector::touchMove(int x, int y) {
 bool TouchInjector::touchUp() {
     if (!isReady()) { last_error_ = "设备未初始化"; return false; }
     if (state_ != TouchState::DOWN) return true;
+
+    if (backend_ == InjectBackend::TWT_DRIVER) {
+        struct twt_touch_event teb = { 0, 0, 0 };
+        if (ioctl(fd_, TWT_TOUCH_UP, &teb) < 0) return false;
+        state_ = TouchState::UP;
+        return true;
+    }
 
     if (backend_ == InjectBackend::KERNEL_DRIVER) {
         if (ioctl(fd_, AIM_TOUCH_UP, 0) < 0) return false;
@@ -444,6 +609,25 @@ bool TouchInjector::swipe(int x1, int y1, int x2, int y2, int steps, int step_de
 // 优势: 完全无触摸事件，反作弊无法通过触摸特征检测
 
 bool TouchInjector::gyroInject(float rx, float ry, float rz) {
+    if (backend_ == InjectBackend::TWT_DRIVER) {
+        // TwT: 直接修改陀螺仪传感器值（GYRO_CONFIG）
+        // 比 input 事件注入更底层，游戏无法通过事件特征检测
+        // x, y 是 float，通过 memcpy 转为 uint32_t 传递
+        struct twt_gyro_config cfg = {};
+        cfg.enable = 1;
+        // TwT 的 x/y 含义: x=水平转动, y=垂直转动
+        // 我们的 rx=绕X轴(垂直), ry=绕Y轴(水平), rz=绕Z轴
+        float twt_x = ry;  // 水平
+        float twt_y = rx;  // 垂直
+        memcpy(&cfg.x, &twt_x, sizeof(uint32_t));
+        memcpy(&cfg.y, &twt_y, sizeof(uint32_t));
+        if (ioctl(fd_, TWT_GYRO_CONFIG, &cfg) < 0) {
+            last_error_ = std::string("TwT GYRO_CONFIG 失败: ") + strerror(errno);
+            return false;
+        }
+        return true;
+    }
+
     if (backend_ != InjectBackend::GYROSCOPE || gyro_fd_ < 0) {
         last_error_ = "陀螺仪后端未初始化";
         return false;
@@ -478,6 +662,14 @@ bool TouchInjector::gyroInject(float rx, float ry, float rz) {
 }
 
 bool TouchInjector::gyroReset() {
+    if (backend_ == InjectBackend::TWT_DRIVER) {
+        // TwT: GYRO_CONFIG with enable=0
+        struct twt_gyro_config cfg = {};
+        cfg.enable = 0;
+        cfg.x = 0;
+        cfg.y = 0;
+        return ioctl(fd_, TWT_GYRO_CONFIG, &cfg) == 0;
+    }
     return gyroInject(0, 0, 0);
 }
 

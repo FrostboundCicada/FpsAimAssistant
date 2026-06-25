@@ -112,9 +112,10 @@ class MainActivity : AppCompatActivity() {
         useSurfaceControl: Boolean = false, autoFire: Boolean = false
     ) {
         val captureMode = if (useSurfaceControl) "surfacecontrol" else "mediaprojection"
-        // 注入后端: 0=uinput, 1=内核驱动, 2=陀螺仪, -1=自动探测
+        // 注入后端: 0=uinput, 1=内核驱动, 2=陀螺仪, 3=TwT驱动, -1=自动探测
         val injectBackend = when (injectBackendGroup.checkedRadioButtonId) {
             R.id.rbInjectAuto -> -1
+            R.id.rbInjectTwt -> 3
             R.id.rbInjectKernel -> 1
             R.id.rbInjectGyro -> 2
             R.id.rbInjectUinput -> 0

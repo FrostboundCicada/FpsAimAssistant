@@ -3,8 +3,10 @@
 // 支持的后端（按反检测强度从高到低）:
 //   1. KERNEL_DRIVER  — 独立 .ko 驱动（aim_touch / zero / qx / rt）
 //                       直接调用 input_handle_event，不创建虚拟设备
-//   2. GYROSCOPE      — 陀螺仪注入，模拟设备转动，无触摸事件
-//   3. UINPUT          — 用户态 /dev/uinput（加固伪装版）
+//   2. TWT_DRIVER     — TwT 驱动（内核 syscall + ioctl）
+//                       支持 touch/gyro/memory，陀螺仪直接修改传感器值
+//   3. GYROSCOPE      — 陀螺仪注入，模拟设备转动，无触摸事件
+//   4. UINPUT          — 用户态 /dev/uinput（加固伪装版）
 //
 // 后端选择策略:
 //   init() 时按顺序探测各后端，优先使用最难检测的。
@@ -23,6 +25,7 @@ enum class InjectBackend : int {
     UINPUT = 0,        // 用户态 /dev/uinput（兼容性好）
     KERNEL_DRIVER = 1, // 独立 .ko 驱动（aim_touch / zero / qx / rt）
     GYROSCOPE = 2,     // 陀螺仪注入（无触摸事件）
+    TWT_DRIVER = 3,    // TwT 驱动（syscall + ioctl，支持 touch/gyro/mem）
 };
 
 // 触摸注入统一接口
@@ -55,7 +58,7 @@ public:
     bool swipe(int x1, int y1, int x2, int y2, int steps = 20, int step_delay_us = 2000);
 
     // ── 陀螺仪专用接口 ──────────────────────────────
-    // 注入陀螺仪旋转（仅 GYROSCOPE 后端有效）
+    // 注入陀螺仪旋转（仅 GYROSCOPE / TWT_DRIVER 后端有效）
     //   rx, ry, rz: 三轴角速度（毫弧度/秒）
     bool gyroInject(float rx, float ry, float rz);
     // 陀螺仪归零
@@ -77,6 +80,17 @@ private:
     bool initGyroscope(int sw, int sh);
     // 查找陀螺仪 input 设备
     int findGyroDevice();
+
+    // ── TwT 驱动后端 ──────────────────────────────────
+    bool initTwtDriver(int sw, int sh);
+    // 通过 /proc/self/fd 查找 TwT_driver 的 anon_inode fd
+    int findTwtFd();
+    // 通过 syscall(__NR_reboot) 获取 TwT fd（内核 hook）
+    int syscallTwtFd();
+    // TwT 陀螺仪初始化
+    bool twtGyroInit(int method);
+    // TwT 触摸初始化
+    bool twtTouchInit(int mode);
 
     // ── 反检测辅助 ──────────────────────────────────
     int randomTrackingId();

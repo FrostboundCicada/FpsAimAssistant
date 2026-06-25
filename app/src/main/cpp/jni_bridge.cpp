@@ -32,7 +32,7 @@ extern "C" {
 
 // ─────────────────────────────────────────────────────────────
 // 初始化: 加载模型 + 创建注入设备
-//   preferredBackend: 0=uinput, 1=内核驱动, 2=陀螺仪, -1=自动探测
+//   preferredBackend: 0=uinput, 1=内核驱动, 2=陀螺仪, 3=TwT驱动, -1=自动探测
 // ─────────────────────────────────────────────────────────────
 JNIEXPORT jboolean JNICALL
 Java_com_aimassistant_NativeBridge_nativeInit(
@@ -49,12 +49,13 @@ Java_com_aimassistant_NativeBridge_nativeInit(
 
     bool ok = g_pipe.yolo->load(param_path, bin_path, useGpu, numThreads);
     if (ok) {
-        // 后端选择: preferredBackend < 0 表示自动探测（内核驱动->陀螺仪->uinput）
+        // 后端选择: preferredBackend < 0 表示自动探测（TwT->内核驱动->陀螺仪->uinput）
         InjectBackend preferred = InjectBackend::NONE;
         switch (preferredBackend) {
         case 0:  preferred = InjectBackend::UINPUT; break;
         case 1:  preferred = InjectBackend::KERNEL_DRIVER; break;
         case 2:  preferred = InjectBackend::GYROSCOPE; break;
+        case 3:  preferred = InjectBackend::TWT_DRIVER; break;
         default: preferred = InjectBackend::NONE; break;
         }
         InjectBackend used = g_pipe.controller->initInjector(screenW, screenH, preferred);

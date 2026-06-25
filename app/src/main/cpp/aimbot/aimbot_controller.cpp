@@ -196,7 +196,9 @@ void AimbotController::aimOnce(float aim_x, float aim_y) {
 void AimbotController::gyroAim(float dx, float dy) {
     if (!cfg_.trigger_enabled) return;
     if (!injector_.isReady()) return;
-    if (injector_.backend() != InjectBackend::GYROSCOPE) return;
+    // 陀螺仪后端或 TwT 驱动都支持陀螺仪注入
+    if (injector_.backend() != InjectBackend::GYROSCOPE &&
+        injector_.backend() != InjectBackend::TWT_DRIVER) return;
 
     float offset_distance = sqrtf(dx * dx + dy * dy);
 
