@@ -60,7 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           cd app/src/main/cpp
-          if [ -d ncnn-android-vulkan ] && [ -f ncnn-android-vulkan/lib/arm64-v8a/libncnn.a ]; then
+          if [ -d ncnn-android-vulkan ] && [ -f ncnn-android-vulkan/arm64-v8a/lib/libncnn.a ]; then
             echo "NCNN 已存在，跳过下载"
             exit 0
           fi
@@ -85,8 +85,8 @@ jobs:
           echo "找到 NCNN 目录: $NCNN_DIR"
           mv "$NCNN_DIR" ncnn-android-vulkan
           rm ncnn.zip
-          # 验证 libncnn.a 存在
-          if [ ! -f ncnn-android-vulkan/lib/arm64-v8a/libncnn.a ]; then
+          # 验证 libncnn.a 存在（NCNN Android 包结构: arm64-v8a/lib/ 而非 lib/arm64-v8a/）
+          if [ ! -f ncnn-android-vulkan/arm64-v8a/lib/libncnn.a ]; then
             echo "错误: libncnn.a 不存在"
             find ncnn-android-vulkan/ -name "libncnn.a" || true
             exit 1

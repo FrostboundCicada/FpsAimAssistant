@@ -10,10 +10,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # NCNN 预编译库位置（Vulkan 版本）。
 # 下载地址: https://github.com/Tencent/ncnn/releases
 # 解压后将目录重命名为 ncnn-android-vulkan 并放入本 cpp 目录。
-# 目录结构:
+# NCNN Android 包结构（按架构分目录）:
 #   cpp/ncnn-android-vulkan/
-#     ├── include/ncnn/
-#     └── lib/arm64-v8a/libncnn.a
+#     ├── arm64-v8a/include/ncnn/
+#     ├── arm64-v8a/lib/libncnn.a
+#     ├── armeabi-v7a/...
+#     ├── x86/...
+#     └── x86_64/...
 # ─────────────────────────────────────────────────────────────
 set(NCNN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ncnn-android-vulkan)
 
@@ -35,7 +38,7 @@ add_library(${PROJECT_NAME} SHARED ${SRC_LIST})
 # ─────────────────────────────────────────────────────────────
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${NCNN_DIR}/include
+    ${NCNN_DIR}/arm64-v8a/include
 )
 
 # ─────────────────────────────────────────────────────────────
@@ -56,11 +59,11 @@ target_link_libraries(${PROJECT_NAME}
 # ─────────────────────────────────────────────────────────────
 # NCNN 静态库（若存在则链接，否则编译期给出友好提示）
 # ─────────────────────────────────────────────────────────────
-if(EXISTS "${NCNN_DIR}/lib/arm64-v8a/libncnn.a")
-    target_link_libraries(${PROJECT_NAME} ${NCNN_DIR}/lib/arm64-v8a/libncnn.a)
+if(EXISTS "${NCNN_DIR}/arm64-v8a/lib/libncnn.a")
+    target_link_libraries(${PROJECT_NAME} ${NCNN_DIR}/arm64-v8a/lib/libncnn.a)
     message(STATUS "NCNN: 已找到预编译库，启用 NCNN 推理")
 else()
-    message(WARNING "NCNN: 未找到 ${NCNN_DIR}/lib/arm64-v8a/libncnn.a，"
+    message(WARNING "NCNN: 未找到 ${NCNN_DIR}/arm64-v8a/lib/libncnn.a，"
                     "请下载 ncnn-android-vulkan 并放入 cpp/ncnn-android-vulkan/")
 endif()
 
