@@ -42,11 +42,8 @@ jobs:
       - name: 配置 Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: |
-            platforms;android-34
-            build-tools;34.0.0
-            cmake;3.22.1
-            ndk;26.3.11579264
+          # packages 必须用空格分隔（不能用 YAML 多行 | 块，否则整块被当成单个包名）
+          packages: 'platforms;android-34 build-tools;34.0.0 cmake;3.22.1 ndk;26.3.11579264'
 
       - name: 配置 Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -59,10 +56,19 @@ jobs:
       - name: 授予 gradlew 执行权限
         run: chmod +x ./gradlew
 
-      - name: 配置 NDK 路径
+      - name: 下载 NCNN 预编译库（Android Vulkan）
         run: |
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.3.11579264" >> $GITHUB_ENV
-          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/26.3.11579264" >> $GITHUB_ENV
+          cd app/src/main/cpp
+          if [ -d ncnn-android-vulkan ] && [ -f ncnn-android-vulkan/lib/arm64-v8a/libncnn.a ]; then
+            echo "NCNN 已存在，跳过下载"
+            exit 0
+          fi
+          # NCNN 官方 release: ncnn-20240410-android-vulkan
+          wget -q https://github.com/Tencent/ncnn/releases/download/20240410/ncnn-20240410-android-vulkan.zip -O ncnn.zip
+          unzip -q ncnn.zip
+          mv ncnn-20240410-android-vulkan ncnn-android-vulkan
+          rm ncnn.zip
+          ls ncnn-android-vulkan/lib/arm64-v8a/
 
       - name: 构建调试版（验证编译）
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
