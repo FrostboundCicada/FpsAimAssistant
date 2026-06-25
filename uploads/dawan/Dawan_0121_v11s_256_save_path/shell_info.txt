@@ -1,0 +1,6 @@
+2026-06-25 22:54:13,174 - INFO : Optimization started.
+2026-06-25 22:54:13,247 - INFO : [ONNX-SIM] Clean ONNX Model input node.
+2026-06-25 22:54:14,401 - INFO : [ONNX2NCNN] Start converting to NCNN.
+2026-06-25 22:54:14,521 - INFO : [ONNX2NCNN] NCNN conversion is done.
+2026-06-25 22:54:14,522 - INFO : [ONNX2NCNN] NCNN conversion is done.
+2026-06-25 22:54:14,522 - INFO : Model optimization done.

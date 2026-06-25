@@ -1,0 +1,321 @@
+7767517
+319 377
+Input            images                   0 1 images
+MemoryData       arith.constant189        0 1 arith.constant189 0=1344 1=1
+MemoryData       arith.constant197        0 1 arith.constant197 0=1344 1=2
+Split            splitncnn_0              1 2 arith.constant197 arith.constant197_splitncnn_0 arith.constant197_splitncnn_1
+MemoryData       const_fold_opt__826      0 1 const_fold_opt__826 0=1 1=1 2=128
+MemoryData       const_fold_opt__832      0 1 const_fold_opt__832 0=1 1=1 2=128
+MemoryData       split__103               0 1 split__103 0=2
+MemoryData       split__120               0 1 split__120 0=2
+Split            splitncnn_1              1 2 split__120 split__120_splitncnn_0 split__120_splitncnn_1
+MemoryData       split__137               0 1 split__137 0=2
+Split            splitncnn_2              1 3 split__137 split__137_splitncnn_0 split__137_splitncnn_1 split__137_splitncnn_2
+MemoryData       split__214               0 1 split__214 0=3
+MemoryData       split__340               0 1 split__340 0=2
+Split            splitncnn_3              1 3 split__340 split__340_splitncnn_0 split__340_splitncnn_1 split__340_splitncnn_2
+MemoryData       split__401               0 1 split__401 0=2
+Padding          model_36/tf.compat.v1.pad/Pad 1 1 images model_36/tf.compat.v1.pad/Pad 0=1 1=1 2=0 3=0 4=0 5=0.000000e+00 7=1 8=1
+Permute          model_36/tf.math.add/Add;model_36/tf.nn.convolution/convolution__93 1 1 model_36/tf.compat.v1.pad/Pad model_36/tf.math.add/Add;model_36/tf.nn.convolution/convolution__93:0 0=4
+Convolution      model_36/tf.math.add/Add;model_36/tf.nn.convolution/convolution 1 1 model_36/tf.math.add/Add;model_36/tf.nn.convolution/convolution__93:0 model_36/tf.math.add/Add;model_36/tf.nn.convolution/convolution 0=32 1=3 11=3 2=1 12=1 3=2 13=2 5=1 6=864
+Swish            model_36/tf.math.multiply_3/Mul 1 1 model_36/tf.math.add/Add;model_36/tf.nn.convolution/convolution model_36/tf.math.multiply_3/Mul
+Convolution      model_36/tf.math.add_1/Add;model_36/tf.nn.convolution_1/convolution 1 1 model_36/tf.math.multiply_3/Mul model_36/tf.math.add_1/Add;model_36/tf.nn.convolution_1/convolution 0=64 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=1 6=18432
+Swish            model_36/tf.math.multiply_7/Mul 1 1 model_36/tf.math.add_1/Add;model_36/tf.nn.convolution_1/convolution model_36/tf.math.multiply_7/Mul
+Convolution      model_36/tf.math.add_4/Add;model_36/tf.nn.convolution_4/convolution 1 1 model_36/tf.math.multiply_7/Mul model_36/tf.math.add_4/Add;model_36/tf.nn.convolution_4/convolution 0=64 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=4096
+Swish            model_36/tf.math.multiply_11/Mul 1 1 model_36/tf.math.add_4/Add;model_36/tf.nn.convolution_4/convolution model_36/tf.math.multiply_11/Mul
+Permute          Transpose__417           1 1 model_36/tf.math.multiply_11/Mul Transpose__417:0 0=3
+Slice            model_36/tf.split/split  2 2 Transpose__417:0 split__103 model_36/tf.split/split model_36/tf.split/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104 1 1 model_36/tf.split/split1 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0 0=4
+Split            splitncnn_4              1 3 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0_splitncnn_0 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0_splitncnn_1 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0_splitncnn_2
+Convolution      model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution 1 1 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0_splitncnn_2 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution 0=16 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=4608
+Swish            model_36/tf.math.multiply_15/Mul 1 1 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution model_36/tf.math.multiply_15/Mul
+Convolution      model_36/tf.math.add_6/Add;model_36/tf.nn.convolution_6/convolution 1 1 model_36/tf.math.multiply_15/Mul model_36/tf.math.add_6/Add;model_36/tf.nn.convolution_6/convolution 0=32 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=4608
+Swish            model_36/tf.math.multiply_19/Mul 1 1 model_36/tf.math.add_6/Add;model_36/tf.nn.convolution_6/convolution model_36/tf.math.multiply_19/Mul
+BinaryOp         model_36/tf.math.add_8/Add 2 1 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0_splitncnn_1 model_36/tf.math.multiply_19/Mul model_36/tf.math.add_8/Add 0=0
+Permute          Transpose__667           1 1 model_36/tf.split/split Transpose__667:0 0=4
+Concat           model_36/tf.concat/concat 3 1 Transpose__667:0 model_36/tf.math.add_5/Add;model_36/tf.nn.convolution_5/convolution__104:0_splitncnn_0 model_36/tf.math.add_8/Add model_36/tf.concat/concat 0=0
+Convolution      model_36/tf.math.add_9/Add;model_36/tf.nn.convolution_7/convolution 1 1 model_36/tf.concat/concat model_36/tf.math.add_9/Add;model_36/tf.nn.convolution_7/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=12288
+Swish            model_36/tf.math.multiply_25/Mul 1 1 model_36/tf.math.add_9/Add;model_36/tf.nn.convolution_7/convolution model_36/tf.math.multiply_25/Mul
+Convolution      model_36/tf.math.add_10/Add;model_36/tf.nn.convolution_8/convolution 1 1 model_36/tf.math.multiply_25/Mul model_36/tf.math.add_10/Add;model_36/tf.nn.convolution_8/convolution 0=128 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_29/Mul 1 1 model_36/tf.math.add_10/Add;model_36/tf.nn.convolution_8/convolution model_36/tf.math.multiply_29/Mul
+Convolution      model_36/tf.math.add_11/Add;model_36/tf.nn.convolution_9/convolution 1 1 model_36/tf.math.multiply_29/Mul model_36/tf.math.add_11/Add;model_36/tf.nn.convolution_9/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=16384
+Swish            model_36/tf.math.multiply_33/Mul 1 1 model_36/tf.math.add_11/Add;model_36/tf.nn.convolution_9/convolution model_36/tf.math.multiply_33/Mul
+Permute          Transpose__427           1 1 model_36/tf.math.multiply_33/Mul Transpose__427:0 0=3
+Slice            model_36/tf.split_1/split 2 2 Transpose__427:0 split__120_splitncnn_1 model_36/tf.split_1/split model_36/tf.split_1/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121 1 1 model_36/tf.split_1/split1 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0 0=4
+Split            splitncnn_5              1 3 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0_splitncnn_0 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0_splitncnn_1 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0_splitncnn_2
+Convolution      model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution 1 1 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0_splitncnn_2 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution 0=32 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=18432
+Swish            model_36/tf.math.multiply_37/Mul 1 1 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution model_36/tf.math.multiply_37/Mul
+Convolution      model_36/tf.math.add_15/Add;model_36/tf.nn.convolution_13/convolution 1 1 model_36/tf.math.multiply_37/Mul model_36/tf.math.add_15/Add;model_36/tf.nn.convolution_13/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=18432
+Swish            model_36/tf.math.multiply_41/Mul 1 1 model_36/tf.math.add_15/Add;model_36/tf.nn.convolution_13/convolution model_36/tf.math.multiply_41/Mul
+BinaryOp         model_36/tf.math.add_17/Add 2 1 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0_splitncnn_1 model_36/tf.math.multiply_41/Mul model_36/tf.math.add_17/Add 0=0
+Permute          Transpose__671           1 1 model_36/tf.split_1/split Transpose__671:0 0=4
+Concat           model_36/tf.concat_1/concat 3 1 Transpose__671:0 model_36/tf.math.add_12/Add;model_36/tf.nn.convolution_10/convolution__121:0_splitncnn_0 model_36/tf.math.add_17/Add model_36/tf.concat_1/concat 0=0
+Convolution      model_36/tf.math.add_18/Add;model_36/tf.nn.convolution_14/convolution 1 1 model_36/tf.concat_1/concat model_36/tf.math.add_18/Add;model_36/tf.nn.convolution_14/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=49152
+Swish            model_36/tf.math.multiply_47/Mul 1 1 model_36/tf.math.add_18/Add;model_36/tf.nn.convolution_14/convolution model_36/tf.math.multiply_47/Mul
+Split            splitncnn_6              1 2 model_36/tf.math.multiply_47/Mul model_36/tf.math.multiply_47/Mul_splitncnn_0 model_36/tf.math.multiply_47/Mul_splitncnn_1
+Convolution      model_36/tf.math.add_19/Add;model_36/tf.nn.convolution_15/convolution 1 1 model_36/tf.math.multiply_47/Mul_splitncnn_1 model_36/tf.math.add_19/Add;model_36/tf.nn.convolution_15/convolution 0=256 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=1 6=589824
+Swish            model_36/tf.math.multiply_51/Mul 1 1 model_36/tf.math.add_19/Add;model_36/tf.nn.convolution_15/convolution model_36/tf.math.multiply_51/Mul
+Convolution      model_36/tf.math.add_20/Add;model_36/tf.nn.convolution_16/convolution 1 1 model_36/tf.math.multiply_51/Mul model_36/tf.math.add_20/Add;model_36/tf.nn.convolution_16/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=65536
+Swish            model_36/tf.math.multiply_55/Mul 1 1 model_36/tf.math.add_20/Add;model_36/tf.nn.convolution_16/convolution model_36/tf.math.multiply_55/Mul
+Permute          Transpose__437           1 1 model_36/tf.math.multiply_55/Mul Transpose__437:0 0=3
+Slice            model_36/tf.split_2/split 2 2 Transpose__437:0 split__137_splitncnn_2 model_36/tf.split_2/split model_36/tf.split_2/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153 1 1 model_36/tf.split_2/split1 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0 0=4
+Split            splitncnn_7              1 3 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0_splitncnn_0 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0_splitncnn_1 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0_splitncnn_2
+Convolution      model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution 1 1 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0_splitncnn_2 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution 0=64 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=8192
+Swish            model_36/tf.math.multiply_63/Mul 1 1 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution model_36/tf.math.multiply_63/Mul
+Convolution      model_36/tf.math.add_21/Add;model_36/tf.nn.convolution_17/convolution 1 1 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0_splitncnn_1 model_36/tf.math.add_21/Add;model_36/tf.nn.convolution_17/convolution 0=64 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=8192
+Swish            model_36/tf.math.multiply_59/Mul 1 1 model_36/tf.math.add_21/Add;model_36/tf.nn.convolution_17/convolution model_36/tf.math.multiply_59/Mul
+Split            splitncnn_8              1 2 model_36/tf.math.multiply_59/Mul model_36/tf.math.multiply_59/Mul_splitncnn_0 model_36/tf.math.multiply_59/Mul_splitncnn_1
+Convolution      model_36/tf.math.add_23/Add;model_36/tf.nn.convolution_19/convolution 1 1 model_36/tf.math.multiply_59/Mul_splitncnn_1 model_36/tf.math.add_23/Add;model_36/tf.nn.convolution_19/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=36864
+Swish            model_36/tf.math.multiply_67/Mul 1 1 model_36/tf.math.add_23/Add;model_36/tf.nn.convolution_19/convolution model_36/tf.math.multiply_67/Mul
+Convolution      model_36/tf.math.add_24/Add;model_36/tf.nn.convolution_20/convolution 1 1 model_36/tf.math.multiply_67/Mul model_36/tf.math.add_24/Add;model_36/tf.nn.convolution_20/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=36864
+Swish            model_36/tf.math.multiply_71/Mul 1 1 model_36/tf.math.add_24/Add;model_36/tf.nn.convolution_20/convolution model_36/tf.math.multiply_71/Mul
+BinaryOp         model_36/tf.math.add_26/Add 2 1 model_36/tf.math.multiply_59/Mul_splitncnn_0 model_36/tf.math.multiply_71/Mul model_36/tf.math.add_26/Add 0=0
+Split            splitncnn_9              1 2 model_36/tf.math.add_26/Add model_36/tf.math.add_26/Add_splitncnn_0 model_36/tf.math.add_26/Add_splitncnn_1
+Convolution      model_36/tf.math.add_27/Add;model_36/tf.nn.convolution_21/convolution 1 1 model_36/tf.math.add_26/Add_splitncnn_1 model_36/tf.math.add_27/Add;model_36/tf.nn.convolution_21/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=36864
+Swish            model_36/tf.math.multiply_77/Mul 1 1 model_36/tf.math.add_27/Add;model_36/tf.nn.convolution_21/convolution model_36/tf.math.multiply_77/Mul
+Convolution      model_36/tf.math.add_28/Add;model_36/tf.nn.convolution_22/convolution 1 1 model_36/tf.math.multiply_77/Mul model_36/tf.math.add_28/Add;model_36/tf.nn.convolution_22/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=36864
+Swish            model_36/tf.math.multiply_81/Mul 1 1 model_36/tf.math.add_28/Add;model_36/tf.nn.convolution_22/convolution model_36/tf.math.multiply_81/Mul
+BinaryOp         model_36/tf.math.add_30/Add 2 1 model_36/tf.math.add_26/Add_splitncnn_0 model_36/tf.math.multiply_81/Mul model_36/tf.math.add_30/Add 0=0
+Concat           model_36/tf.concat_2/concat 2 1 model_36/tf.math.add_30/Add model_36/tf.math.multiply_63/Mul model_36/tf.concat_2/concat 0=0
+Convolution      model_36/tf.math.add_31/Add;model_36/tf.nn.convolution_23/convolution 1 1 model_36/tf.concat_2/concat model_36/tf.math.add_31/Add;model_36/tf.nn.convolution_23/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=16384
+Swish            model_36/tf.math.multiply_87/Mul 1 1 model_36/tf.math.add_31/Add;model_36/tf.nn.convolution_23/convolution model_36/tf.math.multiply_87/Mul
+Permute          Transpose__597           1 1 model_36/tf.split_2/split Transpose__597:0 0=4
+Concat           model_36/tf.concat_3/concat 3 1 Transpose__597:0 model_36/tf.math.add_22/Add;model_36/tf.nn.convolution_18/convolution__153:0_splitncnn_0 model_36/tf.math.multiply_87/Mul model_36/tf.concat_3/concat 0=0
+Convolution      model_36/tf.math.add_32/Add;model_36/tf.nn.convolution_24/convolution 1 1 model_36/tf.concat_3/concat model_36/tf.math.add_32/Add;model_36/tf.nn.convolution_24/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=98304
+Swish            model_36/tf.math.multiply_91/Mul 1 1 model_36/tf.math.add_32/Add;model_36/tf.nn.convolution_24/convolution model_36/tf.math.multiply_91/Mul
+Split            splitncnn_10             1 2 model_36/tf.math.multiply_91/Mul model_36/tf.math.multiply_91/Mul_splitncnn_0 model_36/tf.math.multiply_91/Mul_splitncnn_1
+Convolution      model_36/tf.math.add_33/Add;model_36/tf.nn.convolution_25/convolution 1 1 model_36/tf.math.multiply_91/Mul_splitncnn_1 model_36/tf.math.add_33/Add;model_36/tf.nn.convolution_25/convolution 0=512 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=1 6=1179648
+Swish            model_36/tf.math.multiply_95/Mul 1 1 model_36/tf.math.add_33/Add;model_36/tf.nn.convolution_25/convolution model_36/tf.math.multiply_95/Mul
+Convolution      model_36/tf.math.add_34/Add;model_36/tf.nn.convolution_26/convolution 1 1 model_36/tf.math.multiply_95/Mul model_36/tf.math.add_34/Add;model_36/tf.nn.convolution_26/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=262144
+Swish            model_36/tf.math.multiply_99/Mul 1 1 model_36/tf.math.add_34/Add;model_36/tf.nn.convolution_26/convolution model_36/tf.math.multiply_99/Mul
+Permute          Transpose__457           1 1 model_36/tf.math.multiply_99/Mul Transpose__457:0 0=3
+Slice            model_36/tf.split_3/split 2 2 Transpose__457:0 split__340_splitncnn_2 model_36/tf.split_3/split model_36/tf.split_3/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185 1 1 model_36/tf.split_3/split1 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0 0=4
+Split            splitncnn_11             1 3 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0_splitncnn_0 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0_splitncnn_1 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0_splitncnn_2
+Convolution      model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution 1 1 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0_splitncnn_2 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=32768
+Swish            model_36/tf.math.multiply_107/Mul 1 1 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution model_36/tf.math.multiply_107/Mul
+Convolution      model_36/tf.math.add_35/Add;model_36/tf.nn.convolution_27/convolution 1 1 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0_splitncnn_1 model_36/tf.math.add_35/Add;model_36/tf.nn.convolution_27/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=32768
+Swish            model_36/tf.math.multiply_103/Mul 1 1 model_36/tf.math.add_35/Add;model_36/tf.nn.convolution_27/convolution model_36/tf.math.multiply_103/Mul
+Split            splitncnn_12             1 2 model_36/tf.math.multiply_103/Mul model_36/tf.math.multiply_103/Mul_splitncnn_0 model_36/tf.math.multiply_103/Mul_splitncnn_1
+Convolution      model_36/tf.math.add_37/Add;model_36/tf.nn.convolution_29/convolution 1 1 model_36/tf.math.multiply_103/Mul_splitncnn_1 model_36/tf.math.add_37/Add;model_36/tf.nn.convolution_29/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_111/Mul 1 1 model_36/tf.math.add_37/Add;model_36/tf.nn.convolution_29/convolution model_36/tf.math.multiply_111/Mul
+Convolution      model_36/tf.math.add_38/Add;model_36/tf.nn.convolution_30/convolution 1 1 model_36/tf.math.multiply_111/Mul model_36/tf.math.add_38/Add;model_36/tf.nn.convolution_30/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_115/Mul 1 1 model_36/tf.math.add_38/Add;model_36/tf.nn.convolution_30/convolution model_36/tf.math.multiply_115/Mul
+BinaryOp         model_36/tf.math.add_40/Add 2 1 model_36/tf.math.multiply_103/Mul_splitncnn_0 model_36/tf.math.multiply_115/Mul model_36/tf.math.add_40/Add 0=0
+Split            splitncnn_13             1 2 model_36/tf.math.add_40/Add model_36/tf.math.add_40/Add_splitncnn_0 model_36/tf.math.add_40/Add_splitncnn_1
+Convolution      model_36/tf.math.add_41/Add;model_36/tf.nn.convolution_31/convolution 1 1 model_36/tf.math.add_40/Add_splitncnn_1 model_36/tf.math.add_41/Add;model_36/tf.nn.convolution_31/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_121/Mul 1 1 model_36/tf.math.add_41/Add;model_36/tf.nn.convolution_31/convolution model_36/tf.math.multiply_121/Mul
+Convolution      model_36/tf.math.add_42/Add;model_36/tf.nn.convolution_32/convolution 1 1 model_36/tf.math.multiply_121/Mul model_36/tf.math.add_42/Add;model_36/tf.nn.convolution_32/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_125/Mul 1 1 model_36/tf.math.add_42/Add;model_36/tf.nn.convolution_32/convolution model_36/tf.math.multiply_125/Mul
+BinaryOp         model_36/tf.math.add_44/Add 2 1 model_36/tf.math.add_40/Add_splitncnn_0 model_36/tf.math.multiply_125/Mul model_36/tf.math.add_44/Add 0=0
+Concat           model_36/tf.concat_4/concat 2 1 model_36/tf.math.add_44/Add model_36/tf.math.multiply_107/Mul model_36/tf.concat_4/concat 0=0
+Convolution      model_36/tf.math.add_45/Add;model_36/tf.nn.convolution_33/convolution 1 1 model_36/tf.concat_4/concat model_36/tf.math.add_45/Add;model_36/tf.nn.convolution_33/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=65536
+Swish            model_36/tf.math.multiply_131/Mul 1 1 model_36/tf.math.add_45/Add;model_36/tf.nn.convolution_33/convolution model_36/tf.math.multiply_131/Mul
+Permute          Transpose__609           1 1 model_36/tf.split_3/split Transpose__609:0 0=4
+Concat           model_36/tf.concat_5/concat 3 1 Transpose__609:0 model_36/tf.math.add_36/Add;model_36/tf.nn.convolution_28/convolution__185:0_splitncnn_0 model_36/tf.math.multiply_131/Mul model_36/tf.concat_5/concat 0=0
+Convolution      model_36/tf.math.add_46/Add;model_36/tf.nn.convolution_34/convolution 1 1 model_36/tf.concat_5/concat model_36/tf.math.add_46/Add;model_36/tf.nn.convolution_34/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=393216
+Swish            model_36/tf.math.multiply_135/Mul 1 1 model_36/tf.math.add_46/Add;model_36/tf.nn.convolution_34/convolution model_36/tf.math.multiply_135/Mul
+Convolution      model_36/tf.math.add_47/Add;model_36/tf.nn.convolution_35/convolution 1 1 model_36/tf.math.multiply_135/Mul model_36/tf.math.add_47/Add;model_36/tf.nn.convolution_35/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=131072
+Swish            model_36/tf.math.multiply_139/Mul 1 1 model_36/tf.math.add_47/Add;model_36/tf.nn.convolution_35/convolution model_36/tf.math.multiply_139/Mul
+Split            splitncnn_14             1 2 model_36/tf.math.multiply_139/Mul model_36/tf.math.multiply_139/Mul_splitncnn_0 model_36/tf.math.multiply_139/Mul_splitncnn_1
+Pooling          model_36/tf.compat.v1.nn.pool/max_pool 1 1 model_36/tf.math.multiply_139/Mul_splitncnn_1 model_36/tf.compat.v1.nn.pool/max_pool 0=0 1=5 11=5 2=1 12=1 3=2 13=2 14=2 15=2 5=1
+Split            splitncnn_15             1 2 model_36/tf.compat.v1.nn.pool/max_pool model_36/tf.compat.v1.nn.pool/max_pool_splitncnn_0 model_36/tf.compat.v1.nn.pool/max_pool_splitncnn_1
+Pooling          model_36/tf.compat.v1.nn.pool_1/max_pool 1 1 model_36/tf.compat.v1.nn.pool/max_pool_splitncnn_1 model_36/tf.compat.v1.nn.pool_1/max_pool 0=0 1=5 11=5 2=1 12=1 3=2 13=2 14=2 15=2 5=1
+Split            splitncnn_16             1 2 model_36/tf.compat.v1.nn.pool_1/max_pool model_36/tf.compat.v1.nn.pool_1/max_pool_splitncnn_0 model_36/tf.compat.v1.nn.pool_1/max_pool_splitncnn_1
+Pooling          model_36/tf.compat.v1.nn.pool_2/max_pool 1 1 model_36/tf.compat.v1.nn.pool_1/max_pool_splitncnn_1 model_36/tf.compat.v1.nn.pool_2/max_pool 0=0 1=5 11=5 2=1 12=1 3=2 13=2 14=2 15=2 5=1
+Concat           model_36/tf.concat_6/concat 4 1 model_36/tf.math.multiply_139/Mul_splitncnn_0 model_36/tf.compat.v1.nn.pool/max_pool_splitncnn_0 model_36/tf.compat.v1.nn.pool_1/max_pool_splitncnn_0 model_36/tf.compat.v1.nn.pool_2/max_pool model_36/tf.concat_6/concat 0=0
+Convolution      model_36/tf.math.add_48/Add;model_36/tf.nn.convolution_36/convolution 1 1 model_36/tf.concat_6/concat model_36/tf.math.add_48/Add;model_36/tf.nn.convolution_36/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=524288
+Swish            model_36/tf.math.multiply_143/Mul 1 1 model_36/tf.math.add_48/Add;model_36/tf.nn.convolution_36/convolution model_36/tf.math.multiply_143/Mul
+Convolution      model_36/tf.math.add_49/Add;model_36/tf.nn.convolution_37/convolution 1 1 model_36/tf.math.multiply_143/Mul model_36/tf.math.add_49/Add;model_36/tf.nn.convolution_37/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=262144
+Swish            model_36/tf.math.multiply_147/Mul 1 1 model_36/tf.math.add_49/Add;model_36/tf.nn.convolution_37/convolution model_36/tf.math.multiply_147/Mul
+Permute          Transpose__485           1 1 model_36/tf.math.multiply_147/Mul Transpose__485:0 0=3
+Slice            model_36/tf.split_4/split 2 2 Transpose__485:0 split__340_splitncnn_1 model_36/tf.split_4/split model_36/tf.split_4/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution__210 1 1 model_36/tf.split_4/split1 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution__210:0 0=4
+Split            splitncnn_17             1 2 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution__210:0 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution__210:0_splitncnn_0 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution__210:0_splitncnn_1
+Convolution      model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution 1 1 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution__210:0_splitncnn_1 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=131072
+Reshape          model_36/tf.reshape_2/Reshape 1 1 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution model_36/tf.reshape_2/Reshape 0=64 1=128 2=4
+Slice            model_36/tf.split_5/split 2 3 model_36/tf.reshape_2/Reshape split__214 model_36/tf.split_5/split model_36/tf.split_5/split1 model_36/tf.split_5/split2 -23300=3,-233,-233,-233 1=1
+Split            splitncnn_18             1 2 model_36/tf.split_5/split2 model_36/tf.split_5/split2_splitncnn_0 model_36/tf.split_5/split2_splitncnn_1
+Reshape          model_36/tf.reshape_5/Reshape 1 1 model_36/tf.split_5/split2_splitncnn_1 model_36/tf.reshape_5/Reshape 0=8 1=8 2=256
+ConvolutionDepthWise model_36/tf.math.add_51/Add;model_36/tf.nn.convolution_39/convolution 1 1 model_36/tf.reshape_5/Reshape model_36/tf.math.add_51/Add;model_36/tf.nn.convolution_39/convolution 0=256 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=2304 7=256
+Permute          model_36/tf.linalg.matmul_1/MatMul;model_36/tf.compat.v1.transpose_53/transpose__216 1 1 model_36/tf.split_5/split model_36/tf.linalg.matmul_1/MatMul;model_36/tf.compat.v1.transpose_53/transpose__216:0 0=1
+Gemm             model_36/tf.linalg.matmul_1/MatMul;model_36/tf.compat.v1.transpose_53/transpose 2 1 model_36/tf.linalg.matmul_1/MatMul;model_36/tf.compat.v1.transpose_53/transpose__216:0 model_36/tf.split_5/split1 model_36/tf.linalg.matmul_1/MatMul;model_36/tf.compat.v1.transpose_53/transpose
+BinaryOp         model_36/tf.math.multiply_150/Mul 1 1 model_36/tf.linalg.matmul_1/MatMul;model_36/tf.compat.v1.transpose_53/transpose model_36/tf.math.multiply_150/Mul 0=2 1=1 2=1.767767e-01
+Softmax          model_36/tf.nn.softmax_1/wa/model.10/m/m.0/attn/Softmax 1 1 model_36/tf.math.multiply_150/Mul model_36/tf.nn.softmax_1/wa/model.10/m/m.0/attn/Softmax 0=0 1=1
+Permute          model_36/tf.linalg.matmul_3/MatMul;model_36/tf.compat.v1.transpose_60/transpose__217 1 1 model_36/tf.nn.softmax_1/wa/model.10/m/m.0/attn/Softmax model_36/tf.linalg.matmul_3/MatMul;model_36/tf.compat.v1.transpose_60/transpose__217:0 0=1
+Gemm             model_36/tf.linalg.matmul_3/MatMul;model_36/tf.compat.v1.transpose_60/transpose 2 1 model_36/tf.split_5/split2_splitncnn_0 model_36/tf.linalg.matmul_3/MatMul;model_36/tf.compat.v1.transpose_60/transpose__217:0 model_36/tf.linalg.matmul_3/MatMul;model_36/tf.compat.v1.transpose_60/transpose
+Reshape          model_36/tf.reshape_8/Reshape 1 1 model_36/tf.linalg.matmul_3/MatMul;model_36/tf.compat.v1.transpose_60/transpose model_36/tf.reshape_8/Reshape 0=8 1=8 2=256
+BinaryOp         model_36/tf.math.add_53/Add 2 1 model_36/tf.reshape_8/Reshape model_36/tf.math.add_51/Add;model_36/tf.nn.convolution_39/convolution model_36/tf.math.add_53/Add 0=0
+Convolution      model_36/tf.math.add_54/Add;model_36/tf.nn.convolution_40/convolution 1 1 model_36/tf.math.add_53/Add model_36/tf.math.add_54/Add;model_36/tf.nn.convolution_40/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=65536
+BinaryOp         model_36/tf.math.add_56/Add 2 1 model_36/tf.math.add_50/Add;model_36/tf.nn.convolution_38/convolution__210:0_splitncnn_0 model_36/tf.math.add_54/Add;model_36/tf.nn.convolution_40/convolution model_36/tf.math.add_56/Add 0=0
+Split            splitncnn_19             1 2 model_36/tf.math.add_56/Add model_36/tf.math.add_56/Add_splitncnn_0 model_36/tf.math.add_56/Add_splitncnn_1
+Convolution      model_36/tf.math.add_57/Add;model_36/tf.nn.convolution_41/convolution 1 1 model_36/tf.math.add_56/Add_splitncnn_1 model_36/tf.math.add_57/Add;model_36/tf.nn.convolution_41/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=131072
+Swish            model_36/tf.math.multiply_158/Mul 1 1 model_36/tf.math.add_57/Add;model_36/tf.nn.convolution_41/convolution model_36/tf.math.multiply_158/Mul
+Convolution      model_36/tf.math.add_58/Add;model_36/tf.nn.convolution_42/convolution 1 1 model_36/tf.math.multiply_158/Mul model_36/tf.math.add_58/Add;model_36/tf.nn.convolution_42/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=131072
+BinaryOp         model_36/tf.math.add_60/Add 2 1 model_36/tf.math.add_56/Add_splitncnn_0 model_36/tf.math.add_58/Add;model_36/tf.nn.convolution_42/convolution model_36/tf.math.add_60/Add 0=0
+Permute          Transpose__615           1 1 model_36/tf.split_4/split Transpose__615:0 0=4
+Concat           model_36/tf.concat_7/concat 2 1 Transpose__615:0 model_36/tf.math.add_60/Add model_36/tf.concat_7/concat 0=0
+Convolution      model_36/tf.math.add_61/Add;model_36/tf.nn.convolution_43/convolution 1 1 model_36/tf.concat_7/concat model_36/tf.math.add_61/Add;model_36/tf.nn.convolution_43/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=262144
+Swish            model_36/tf.math.multiply_164/Mul 1 1 model_36/tf.math.add_61/Add;model_36/tf.nn.convolution_43/convolution model_36/tf.math.multiply_164/Mul
+Split            splitncnn_20             1 2 model_36/tf.math.multiply_164/Mul model_36/tf.math.multiply_164/Mul_splitncnn_0 model_36/tf.math.multiply_164/Mul_splitncnn_1
+Interp           Resize__237              1 1 model_36/tf.math.multiply_164/Mul_splitncnn_1 Resize__237:0 0=1 1=2.000000e+00 2=2.000000e+00 3=0 4=0 6=0
+Concat           model_36/tf.concat_8/concat 2 1 Resize__237:0 model_36/tf.math.multiply_91/Mul_splitncnn_0 model_36/tf.concat_8/concat 0=0
+Convolution      model_36/tf.math.add_62/Add;model_36/tf.nn.convolution_44/convolution 1 1 model_36/tf.concat_8/concat model_36/tf.math.add_62/Add;model_36/tf.nn.convolution_44/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=196608
+Swish            model_36/tf.math.multiply_168/Mul 1 1 model_36/tf.math.add_62/Add;model_36/tf.nn.convolution_44/convolution model_36/tf.math.multiply_168/Mul
+Permute          Transpose__499           1 1 model_36/tf.math.multiply_168/Mul Transpose__499:0 0=3
+Slice            model_36/tf.split_6/split 2 2 Transpose__499:0 split__137_splitncnn_1 model_36/tf.split_6/split model_36/tf.split_6/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242 1 1 model_36/tf.split_6/split1 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0 0=4
+Split            splitncnn_21             1 3 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0_splitncnn_0 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0_splitncnn_1 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0_splitncnn_2
+Convolution      model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution 1 1 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0_splitncnn_2 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=73728
+Swish            model_36/tf.math.multiply_172/Mul 1 1 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution model_36/tf.math.multiply_172/Mul
+Convolution      model_36/tf.math.add_64/Add;model_36/tf.nn.convolution_46/convolution 1 1 model_36/tf.math.multiply_172/Mul model_36/tf.math.add_64/Add;model_36/tf.nn.convolution_46/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=73728
+Swish            model_36/tf.math.multiply_176/Mul 1 1 model_36/tf.math.add_64/Add;model_36/tf.nn.convolution_46/convolution model_36/tf.math.multiply_176/Mul
+BinaryOp         model_36/tf.math.add_66/Add 2 1 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0_splitncnn_1 model_36/tf.math.multiply_176/Mul model_36/tf.math.add_66/Add 0=0
+Permute          Transpose__675           1 1 model_36/tf.split_6/split Transpose__675:0 0=4
+Concat           model_36/tf.concat_9/concat 3 1 Transpose__675:0 model_36/tf.math.add_63/Add;model_36/tf.nn.convolution_45/convolution__242:0_splitncnn_0 model_36/tf.math.add_66/Add model_36/tf.concat_9/concat 0=0
+Convolution      model_36/tf.math.add_67/Add;model_36/tf.nn.convolution_47/convolution 1 1 model_36/tf.concat_9/concat model_36/tf.math.add_67/Add;model_36/tf.nn.convolution_47/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=98304
+Swish            model_36/tf.math.multiply_182/Mul 1 1 model_36/tf.math.add_67/Add;model_36/tf.nn.convolution_47/convolution model_36/tf.math.multiply_182/Mul
+Split            splitncnn_22             1 2 model_36/tf.math.multiply_182/Mul model_36/tf.math.multiply_182/Mul_splitncnn_0 model_36/tf.math.multiply_182/Mul_splitncnn_1
+Interp           Resize__254              1 1 model_36/tf.math.multiply_182/Mul_splitncnn_1 Resize__254:0 0=1 1=2.000000e+00 2=2.000000e+00 3=0 4=0 6=0
+Concat           model_36/tf.concat_10/concat 2 1 Resize__254:0 model_36/tf.math.multiply_47/Mul_splitncnn_0 model_36/tf.concat_10/concat 0=0
+Convolution      model_36/tf.math.add_68/Add;model_36/tf.nn.convolution_48/convolution 1 1 model_36/tf.concat_10/concat model_36/tf.math.add_68/Add;model_36/tf.nn.convolution_48/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=65536
+Swish            model_36/tf.math.multiply_186/Mul 1 1 model_36/tf.math.add_68/Add;model_36/tf.nn.convolution_48/convolution model_36/tf.math.multiply_186/Mul
+Permute          Transpose__509           1 1 model_36/tf.math.multiply_186/Mul Transpose__509:0 0=3
+Slice            model_36/tf.split_7/split 2 2 Transpose__509:0 split__120_splitncnn_0 model_36/tf.split_7/split model_36/tf.split_7/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259 1 1 model_36/tf.split_7/split1 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0 0=4
+Split            splitncnn_23             1 3 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0_splitncnn_0 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0_splitncnn_1 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0_splitncnn_2
+Convolution      model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution 1 1 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0_splitncnn_2 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution 0=32 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=18432
+Swish            model_36/tf.math.multiply_190/Mul 1 1 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution model_36/tf.math.multiply_190/Mul
+Convolution      model_36/tf.math.add_72/Add;model_36/tf.nn.convolution_52/convolution 1 1 model_36/tf.math.multiply_190/Mul model_36/tf.math.add_72/Add;model_36/tf.nn.convolution_52/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=18432
+Swish            model_36/tf.math.multiply_194/Mul 1 1 model_36/tf.math.add_72/Add;model_36/tf.nn.convolution_52/convolution model_36/tf.math.multiply_194/Mul
+BinaryOp         model_36/tf.math.add_74/Add 2 1 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0_splitncnn_1 model_36/tf.math.multiply_194/Mul model_36/tf.math.add_74/Add 0=0
+Permute          Transpose__679           1 1 model_36/tf.split_7/split Transpose__679:0 0=4
+Concat           model_36/tf.concat_11/concat 3 1 Transpose__679:0 model_36/tf.math.add_69/Add;model_36/tf.nn.convolution_49/convolution__259:0_splitncnn_0 model_36/tf.math.add_74/Add model_36/tf.concat_11/concat 0=0
+Convolution      model_36/tf.math.add_75/Add;model_36/tf.nn.convolution_53/convolution 1 1 model_36/tf.concat_11/concat model_36/tf.math.add_75/Add;model_36/tf.nn.convolution_53/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=24576
+Swish            model_36/tf.math.multiply_200/Mul 1 1 model_36/tf.math.add_75/Add;model_36/tf.nn.convolution_53/convolution model_36/tf.math.multiply_200/Mul
+Split            splitncnn_24             1 3 model_36/tf.math.multiply_200/Mul model_36/tf.math.multiply_200/Mul_splitncnn_0 model_36/tf.math.multiply_200/Mul_splitncnn_1 model_36/tf.math.multiply_200/Mul_splitncnn_2
+ConvolutionDepthWise model_36/tf.math.add_78/Add;model_36/tf.compat.v1.nn.depthwise_conv2d/depthwise 1 1 model_36/tf.math.multiply_200/Mul_splitncnn_2 model_36/tf.math.add_78/Add;model_36/tf.compat.v1.nn.depthwise_conv2d/depthwise 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=1152 7=128
+Swish            model_36/tf.math.multiply_212/Mul 1 1 model_36/tf.math.add_78/Add;model_36/tf.compat.v1.nn.depthwise_conv2d/depthwise model_36/tf.math.multiply_212/Mul
+Convolution      model_36/tf.math.add_80/Add;model_36/tf.nn.convolution_57/convolution 1 1 model_36/tf.math.multiply_212/Mul model_36/tf.math.add_80/Add;model_36/tf.nn.convolution_57/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=16384
+Swish            model_36/tf.math.multiply_220/Mul 1 1 model_36/tf.math.add_80/Add;model_36/tf.nn.convolution_57/convolution model_36/tf.math.multiply_220/Mul
+ConvolutionDepthWise model_36/tf.math.add_83/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_1/depthwise 1 1 model_36/tf.math.multiply_220/Mul model_36/tf.math.add_83/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_1/depthwise 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=1152 7=128
+Swish            model_36/tf.math.multiply_228/Mul 1 1 model_36/tf.math.add_83/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_1/depthwise model_36/tf.math.multiply_228/Mul
+Convolution      model_36/tf.math.add_85/Add;model_36/tf.nn.convolution_61/convolution 1 1 model_36/tf.math.multiply_228/Mul model_36/tf.math.add_85/Add;model_36/tf.nn.convolution_61/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=16384
+Swish            model_36/tf.math.multiply_236/Mul 1 1 model_36/tf.math.add_85/Add;model_36/tf.nn.convolution_61/convolution model_36/tf.math.multiply_236/Mul
+Convolution      model_36/tf.math.add_87/Add;model_36/tf.nn.convolution_63/convolution 1 1 model_36/tf.math.multiply_236/Mul model_36/tf.math.add_87/Add;model_36/tf.nn.convolution_63/convolution 0=7 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=896
+Convolution      model_36/tf.math.add_77/Add;model_36/tf.nn.convolution_55/convolution 1 1 model_36/tf.math.multiply_200/Mul_splitncnn_1 model_36/tf.math.add_77/Add;model_36/tf.nn.convolution_55/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=73728
+Swish            model_36/tf.math.multiply_208/Mul 1 1 model_36/tf.math.add_77/Add;model_36/tf.nn.convolution_55/convolution model_36/tf.math.multiply_208/Mul
+Convolution      model_36/tf.math.add_79/Add;model_36/tf.nn.convolution_56/convolution 1 1 model_36/tf.math.multiply_208/Mul model_36/tf.math.add_79/Add;model_36/tf.nn.convolution_56/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=36864
+Swish            model_36/tf.math.multiply_216/Mul 1 1 model_36/tf.math.add_79/Add;model_36/tf.nn.convolution_56/convolution model_36/tf.math.multiply_216/Mul
+Convolution      model_36/tf.math.add_82/Add;model_36/tf.nn.convolution_59/convolution 1 1 model_36/tf.math.multiply_216/Mul model_36/tf.math.add_82/Add;model_36/tf.nn.convolution_59/convolution 0=64 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=4096
+Concat           model_36/tf.concat_13/concat 2 1 model_36/tf.math.add_82/Add;model_36/tf.nn.convolution_59/convolution model_36/tf.math.add_87/Add;model_36/tf.nn.convolution_63/convolution model_36/tf.concat_13/concat 0=0
+Reshape          model_36/tf.reshape_11/Reshape 1 1 model_36/tf.concat_13/concat model_36/tf.reshape_11/Reshape 0=1024 1=71
+Convolution      model_36/tf.math.add_76/Add;model_36/tf.nn.convolution_54/convolution 1 1 model_36/tf.math.multiply_200/Mul_splitncnn_0 model_36/tf.math.add_76/Add;model_36/tf.nn.convolution_54/convolution 0=128 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_204/Mul 1 1 model_36/tf.math.add_76/Add;model_36/tf.nn.convolution_54/convolution model_36/tf.math.multiply_204/Mul
+Concat           model_36/tf.concat_12/concat 2 1 model_36/tf.math.multiply_204/Mul model_36/tf.math.multiply_182/Mul_splitncnn_0 model_36/tf.concat_12/concat 0=0
+Convolution      model_36/tf.math.add_81/Add;model_36/tf.nn.convolution_58/convolution 1 1 model_36/tf.concat_12/concat model_36/tf.math.add_81/Add;model_36/tf.nn.convolution_58/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=98304
+Swish            model_36/tf.math.multiply_224/Mul 1 1 model_36/tf.math.add_81/Add;model_36/tf.nn.convolution_58/convolution model_36/tf.math.multiply_224/Mul
+Permute          Transpose__523           1 1 model_36/tf.math.multiply_224/Mul Transpose__523:0 0=3
+Slice            model_36/tf.split_8/split 2 2 Transpose__523:0 split__137_splitncnn_0 model_36/tf.split_8/split model_36/tf.split_8/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305 1 1 model_36/tf.split_8/split1 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0 0=4
+Split            splitncnn_25             1 3 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0_splitncnn_0 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0_splitncnn_1 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0_splitncnn_2
+Convolution      model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution 1 1 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0_splitncnn_2 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=73728
+Swish            model_36/tf.math.multiply_232/Mul 1 1 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution model_36/tf.math.multiply_232/Mul
+Convolution      model_36/tf.math.add_86/Add;model_36/tf.nn.convolution_62/convolution 1 1 model_36/tf.math.multiply_232/Mul model_36/tf.math.add_86/Add;model_36/tf.nn.convolution_62/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=73728
+Swish            model_36/tf.math.multiply_240/Mul 1 1 model_36/tf.math.add_86/Add;model_36/tf.nn.convolution_62/convolution model_36/tf.math.multiply_240/Mul
+BinaryOp         model_36/tf.math.add_89/Add 2 1 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0_splitncnn_1 model_36/tf.math.multiply_240/Mul model_36/tf.math.add_89/Add 0=0
+Permute          Transpose__683           1 1 model_36/tf.split_8/split Transpose__683:0 0=4
+Concat           model_36/tf.concat_14/concat 3 1 Transpose__683:0 model_36/tf.math.add_84/Add;model_36/tf.nn.convolution_60/convolution__305:0_splitncnn_0 model_36/tf.math.add_89/Add model_36/tf.concat_14/concat 0=0
+Convolution      model_36/tf.math.add_90/Add;model_36/tf.nn.convolution_64/convolution 1 1 model_36/tf.concat_14/concat model_36/tf.math.add_90/Add;model_36/tf.nn.convolution_64/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=98304
+Swish            model_36/tf.math.multiply_246/Mul 1 1 model_36/tf.math.add_90/Add;model_36/tf.nn.convolution_64/convolution model_36/tf.math.multiply_246/Mul
+Split            splitncnn_26             1 3 model_36/tf.math.multiply_246/Mul model_36/tf.math.multiply_246/Mul_splitncnn_0 model_36/tf.math.multiply_246/Mul_splitncnn_1 model_36/tf.math.multiply_246/Mul_splitncnn_2
+ConvolutionDepthWise model_36/tf.math.add_93/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_2/depthwise 1 1 model_36/tf.math.multiply_246/Mul_splitncnn_2 model_36/tf.math.add_93/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_2/depthwise 0=256 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=2304 7=256
+Swish            model_36/tf.math.multiply_258/Mul 1 1 model_36/tf.math.add_93/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_2/depthwise model_36/tf.math.multiply_258/Mul
+Convolution      model_36/tf.math.add_95/Add;model_36/tf.nn.convolution_68/convolution 1 1 model_36/tf.math.multiply_258/Mul model_36/tf.math.add_95/Add;model_36/tf.nn.convolution_68/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=32768
+Swish            model_36/tf.math.multiply_266/Mul 1 1 model_36/tf.math.add_95/Add;model_36/tf.nn.convolution_68/convolution model_36/tf.math.multiply_266/Mul
+ConvolutionDepthWise model_36/tf.math.add_98/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_3/depthwise 1 1 model_36/tf.math.multiply_266/Mul model_36/tf.math.add_98/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_3/depthwise 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=1152 7=128
+Swish            model_36/tf.math.multiply_274/Mul 1 1 model_36/tf.math.add_98/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_3/depthwise model_36/tf.math.multiply_274/Mul
+Convolution      model_36/tf.math.add_101/Add;model_36/tf.nn.convolution_73/convolution 1 1 model_36/tf.math.multiply_274/Mul model_36/tf.math.add_101/Add;model_36/tf.nn.convolution_73/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=16384
+Swish            model_36/tf.math.multiply_286/Mul 1 1 model_36/tf.math.add_101/Add;model_36/tf.nn.convolution_73/convolution model_36/tf.math.multiply_286/Mul
+Convolution      model_36/tf.math.add_103/Add;model_36/tf.nn.convolution_75/convolution 1 1 model_36/tf.math.multiply_286/Mul model_36/tf.math.add_103/Add;model_36/tf.nn.convolution_75/convolution 0=7 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=896
+Convolution      model_36/tf.math.add_92/Add;model_36/tf.nn.convolution_66/convolution 1 1 model_36/tf.math.multiply_246/Mul_splitncnn_1 model_36/tf.math.add_92/Add;model_36/tf.nn.convolution_66/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_254/Mul 1 1 model_36/tf.math.add_92/Add;model_36/tf.nn.convolution_66/convolution model_36/tf.math.multiply_254/Mul
+Convolution      model_36/tf.math.add_94/Add;model_36/tf.nn.convolution_67/convolution 1 1 model_36/tf.math.multiply_254/Mul model_36/tf.math.add_94/Add;model_36/tf.nn.convolution_67/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=36864
+Swish            model_36/tf.math.multiply_262/Mul 1 1 model_36/tf.math.add_94/Add;model_36/tf.nn.convolution_67/convolution model_36/tf.math.multiply_262/Mul
+Convolution      model_36/tf.math.add_97/Add;model_36/tf.nn.convolution_70/convolution 1 1 model_36/tf.math.multiply_262/Mul model_36/tf.math.add_97/Add;model_36/tf.nn.convolution_70/convolution 0=64 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=4096
+Concat           model_36/tf.concat_16/concat 2 1 model_36/tf.math.add_97/Add;model_36/tf.nn.convolution_70/convolution model_36/tf.math.add_103/Add;model_36/tf.nn.convolution_75/convolution model_36/tf.concat_16/concat 0=0
+Reshape          model_36/tf.reshape_14/Reshape 1 1 model_36/tf.concat_16/concat model_36/tf.reshape_14/Reshape 0=256 1=71
+Convolution      model_36/tf.math.add_91/Add;model_36/tf.nn.convolution_65/convolution 1 1 model_36/tf.math.multiply_246/Mul_splitncnn_0 model_36/tf.math.add_91/Add;model_36/tf.nn.convolution_65/convolution 0=256 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=1 6=589824
+Swish            model_36/tf.math.multiply_250/Mul 1 1 model_36/tf.math.add_91/Add;model_36/tf.nn.convolution_65/convolution model_36/tf.math.multiply_250/Mul
+Concat           model_36/tf.concat_15/concat 2 1 model_36/tf.math.multiply_250/Mul model_36/tf.math.multiply_164/Mul_splitncnn_0 model_36/tf.concat_15/concat 0=0
+Convolution      model_36/tf.math.add_96/Add;model_36/tf.nn.convolution_69/convolution 1 1 model_36/tf.concat_15/concat model_36/tf.math.add_96/Add;model_36/tf.nn.convolution_69/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=393216
+Swish            model_36/tf.math.multiply_270/Mul 1 1 model_36/tf.math.add_96/Add;model_36/tf.nn.convolution_69/convolution model_36/tf.math.multiply_270/Mul
+Permute          Transpose__537           1 1 model_36/tf.math.multiply_270/Mul Transpose__537:0 0=3
+Slice            model_36/tf.split_9/split 2 2 Transpose__537:0 split__340_splitncnn_0 model_36/tf.split_9/split model_36/tf.split_9/split1 -23300=2,-233,-233 1=2
+Permute          model_36/tf.nn.convolution_71/convolution__351 1 1 model_36/tf.split_9/split1 model_36/tf.nn.convolution_71/convolution__351:0 0=4
+Split            splitncnn_27             1 2 model_36/tf.nn.convolution_71/convolution__351:0 model_36/tf.nn.convolution_71/convolution__351:0_splitncnn_0 model_36/tf.nn.convolution_71/convolution__351:0_splitncnn_1
+Convolution      model_36/tf.nn.convolution_71/convolution 1 1 model_36/tf.nn.convolution_71/convolution__351:0_splitncnn_1 model_36/tf.nn.convolution_71/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=32768
+Split            splitncnn_28             1 2 model_36/tf.nn.convolution_71/convolution model_36/tf.nn.convolution_71/convolution_splitncnn_0 model_36/tf.nn.convolution_71/convolution_splitncnn_1
+BinaryOp         model_36/tf.math.add_99/Add 2 1 model_36/tf.nn.convolution_71/convolution_splitncnn_1 const_fold_opt__826 model_36/tf.math.add_99/Add 0=0
+Swish            model_36/tf.math.multiply_278/Mul 1 1 model_36/tf.math.add_99/Add model_36/tf.math.multiply_278/Mul
+Split            splitncnn_29             1 2 model_36/tf.math.multiply_278/Mul model_36/tf.math.multiply_278/Mul_splitncnn_0 model_36/tf.math.multiply_278/Mul_splitncnn_1
+Convolution      model_36/tf.math.add_102/Add;model_36/tf.nn.convolution_74/convolution 1 1 model_36/tf.math.multiply_278/Mul_splitncnn_1 model_36/tf.math.add_102/Add;model_36/tf.nn.convolution_74/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_290/Mul 1 1 model_36/tf.math.add_102/Add;model_36/tf.nn.convolution_74/convolution model_36/tf.math.multiply_290/Mul
+Convolution      model_36/tf.math.add_104/Add;model_36/tf.nn.convolution_76/convolution 1 1 model_36/tf.math.multiply_290/Mul model_36/tf.math.add_104/Add;model_36/tf.nn.convolution_76/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_294/Mul 1 1 model_36/tf.math.add_104/Add;model_36/tf.nn.convolution_76/convolution model_36/tf.math.multiply_294/Mul
+BinaryOp         model_36/tf.math.add_106/Add 2 1 model_36/tf.math.multiply_278/Mul_splitncnn_0 model_36/tf.math.multiply_294/Mul model_36/tf.math.add_106/Add 0=0
+Split            splitncnn_30             1 2 model_36/tf.math.add_106/Add model_36/tf.math.add_106/Add_splitncnn_0 model_36/tf.math.add_106/Add_splitncnn_1
+Convolution      model_36/tf.math.add_107/Add;model_36/tf.nn.convolution_77/convolution 1 1 model_36/tf.math.add_106/Add_splitncnn_1 model_36/tf.math.add_107/Add;model_36/tf.nn.convolution_77/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_300/Mul 1 1 model_36/tf.math.add_107/Add;model_36/tf.nn.convolution_77/convolution model_36/tf.math.multiply_300/Mul
+Convolution      model_36/tf.math.add_108/Add;model_36/tf.nn.convolution_78/convolution 1 1 model_36/tf.math.multiply_300/Mul model_36/tf.math.add_108/Add;model_36/tf.nn.convolution_78/convolution 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=147456
+Swish            model_36/tf.math.multiply_304/Mul 1 1 model_36/tf.math.add_108/Add;model_36/tf.nn.convolution_78/convolution model_36/tf.math.multiply_304/Mul
+BinaryOp         model_36/tf.math.add_110/Add 2 1 model_36/tf.math.add_106/Add_splitncnn_0 model_36/tf.math.multiply_304/Mul model_36/tf.math.add_110/Add 0=0
+BinaryOp         model_36/tf.math.add_100/Add 2 1 model_36/tf.nn.convolution_71/convolution_splitncnn_0 const_fold_opt__832 model_36/tf.math.add_100/Add 0=0
+Swish            model_36/tf.math.multiply_282/Mul 1 1 model_36/tf.math.add_100/Add model_36/tf.math.multiply_282/Mul
+Concat           model_36/tf.concat_17/concat 2 1 model_36/tf.math.add_110/Add model_36/tf.math.multiply_282/Mul model_36/tf.concat_17/concat 0=0
+Convolution      model_36/tf.math.add_111/Add;model_36/tf.nn.convolution_79/convolution 1 1 model_36/tf.concat_17/concat model_36/tf.math.add_111/Add;model_36/tf.nn.convolution_79/convolution 0=256 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=65536
+Swish            model_36/tf.math.multiply_310/Mul 1 1 model_36/tf.math.add_111/Add;model_36/tf.nn.convolution_79/convolution model_36/tf.math.multiply_310/Mul
+Permute          Transpose__661           1 1 model_36/tf.split_9/split Transpose__661:0 0=4
+Concat           model_36/tf.concat_18/concat 3 1 Transpose__661:0 model_36/tf.nn.convolution_71/convolution__351:0_splitncnn_0 model_36/tf.math.multiply_310/Mul model_36/tf.concat_18/concat 0=0
+Convolution      model_36/tf.math.add_112/Add;model_36/tf.nn.convolution_80/convolution 1 1 model_36/tf.concat_18/concat model_36/tf.math.add_112/Add;model_36/tf.nn.convolution_80/convolution 0=512 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=393216
+Swish            model_36/tf.math.multiply_314/Mul 1 1 model_36/tf.math.add_112/Add;model_36/tf.nn.convolution_80/convolution model_36/tf.math.multiply_314/Mul
+Split            splitncnn_31             1 2 model_36/tf.math.multiply_314/Mul model_36/tf.math.multiply_314/Mul_splitncnn_0 model_36/tf.math.multiply_314/Mul_splitncnn_1
+ConvolutionDepthWise model_36/tf.math.add_114/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_4/depthwise 1 1 model_36/tf.math.multiply_314/Mul_splitncnn_1 model_36/tf.math.add_114/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_4/depthwise 0=512 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=4608 7=512
+Swish            model_36/tf.math.multiply_322/Mul 1 1 model_36/tf.math.add_114/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_4/depthwise model_36/tf.math.multiply_322/Mul
+Convolution      model_36/tf.math.add_116/Add;model_36/tf.nn.convolution_83/convolution 1 1 model_36/tf.math.multiply_322/Mul model_36/tf.math.add_116/Add;model_36/tf.nn.convolution_83/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=65536
+Swish            model_36/tf.math.multiply_330/Mul 1 1 model_36/tf.math.add_116/Add;model_36/tf.nn.convolution_83/convolution model_36/tf.math.multiply_330/Mul
+ConvolutionDepthWise model_36/tf.math.add_118/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_5/depthwise 1 1 model_36/tf.math.multiply_330/Mul model_36/tf.math.add_118/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_5/depthwise 0=128 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=1152 7=128
+Swish            model_36/tf.math.multiply_334/Mul 1 1 model_36/tf.math.add_118/Add;model_36/tf.compat.v1.nn.depthwise_conv2d_5/depthwise model_36/tf.math.multiply_334/Mul
+Convolution      model_36/tf.math.add_119/Add;model_36/tf.nn.convolution_85/convolution 1 1 model_36/tf.math.multiply_334/Mul model_36/tf.math.add_119/Add;model_36/tf.nn.convolution_85/convolution 0=128 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=16384
+Swish            model_36/tf.math.multiply_338/Mul 1 1 model_36/tf.math.add_119/Add;model_36/tf.nn.convolution_85/convolution model_36/tf.math.multiply_338/Mul
+Convolution      model_36/tf.math.add_120/Add;model_36/tf.nn.convolution_86/convolution 1 1 model_36/tf.math.multiply_338/Mul model_36/tf.math.add_120/Add;model_36/tf.nn.convolution_86/convolution 0=7 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=896
+Convolution      model_36/tf.math.add_113/Add;model_36/tf.nn.convolution_81/convolution 1 1 model_36/tf.math.multiply_314/Mul_splitncnn_0 model_36/tf.math.add_113/Add;model_36/tf.nn.convolution_81/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=294912
+Swish            model_36/tf.math.multiply_318/Mul 1 1 model_36/tf.math.add_113/Add;model_36/tf.nn.convolution_81/convolution model_36/tf.math.multiply_318/Mul
+Convolution      model_36/tf.math.add_115/Add;model_36/tf.nn.convolution_82/convolution 1 1 model_36/tf.math.multiply_318/Mul model_36/tf.math.add_115/Add;model_36/tf.nn.convolution_82/convolution 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=1 6=36864
+Swish            model_36/tf.math.multiply_326/Mul 1 1 model_36/tf.math.add_115/Add;model_36/tf.nn.convolution_82/convolution model_36/tf.math.multiply_326/Mul
+Convolution      model_36/tf.math.add_117/Add;model_36/tf.nn.convolution_84/convolution 1 1 model_36/tf.math.multiply_326/Mul model_36/tf.math.add_117/Add;model_36/tf.nn.convolution_84/convolution 0=64 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=4096
+Concat           model_36/tf.concat_19/concat 2 1 model_36/tf.math.add_117/Add;model_36/tf.nn.convolution_84/convolution model_36/tf.math.add_120/Add;model_36/tf.nn.convolution_86/convolution model_36/tf.concat_19/concat 0=0
+Reshape          model_36/tf.reshape_17/Reshape 1 1 model_36/tf.concat_19/concat model_36/tf.reshape_17/Reshape 0=64 1=71
+Concat           model_36/tf.concat_20/concat 3 1 model_36/tf.reshape_11/Reshape model_36/tf.reshape_14/Reshape model_36/tf.reshape_17/Reshape model_36/tf.concat_20/concat 0=1
+Slice            model_36/tf.split_10/split 2 2 model_36/tf.concat_20/concat split__401 model_36/tf.split_10/split model_36/tf.split_10/split1 -23300=2,-233,-233 1=0
+Reshape          model_36/tf.reshape_20/Reshape 1 1 model_36/tf.split_10/split model_36/tf.reshape_20/Reshape 0=1344 1=16 2=4
+Softmax          model_36/tf.nn.softmax_2/wa/model.23/dfl/Softmax 1 1 model_36/tf.reshape_20/Reshape model_36/tf.nn.softmax_2/wa/model.23/dfl/Softmax 0=1 1=1
+Permute          model_36/tf.nn.convolution_87/convolution__403 1 1 model_36/tf.nn.softmax_2/wa/model.23/dfl/Softmax model_36/tf.nn.convolution_87/convolution__403:0 0=2
+Convolution      model_36/tf.nn.convolution_87/convolution 1 1 model_36/tf.nn.convolution_87/convolution__403:0 model_36/tf.nn.convolution_87/convolution 0=1 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=1 6=16
+Reshape          model_36/tf.reshape_23/Reshape 1 1 model_36/tf.nn.convolution_87/convolution model_36/tf.reshape_23/Reshape 0=1344 1=4
+Split            splitncnn_32             1 2 model_36/tf.reshape_23/Reshape model_36/tf.reshape_23/Reshape_splitncnn_0 model_36/tf.reshape_23/Reshape_splitncnn_1
+Crop             model_36/tf.strided_slice_1/StridedSlice 1 1 model_36/tf.reshape_23/Reshape_splitncnn_1 model_36/tf.strided_slice_1/StridedSlice -23309=2,2,0 -23310=2,4,2147483647 -23311=2,0,1
+BinaryOp         model_36/tf.math.add_121/Add 2 1 model_36/tf.strided_slice_1/StridedSlice arith.constant197_splitncnn_1 model_36/tf.math.add_121/Add 0=0
+Split            splitncnn_33             1 2 model_36/tf.math.add_121/Add model_36/tf.math.add_121/Add_splitncnn_0 model_36/tf.math.add_121/Add_splitncnn_1
+Crop             model_36/tf.strided_slice/StridedSlice 1 1 model_36/tf.reshape_23/Reshape_splitncnn_0 model_36/tf.strided_slice/StridedSlice -23309=2,0,0 -23310=2,2,2147483647 -23311=2,0,1
+BinaryOp         model_36/tf.math.subtract/Sub 2 1 arith.constant197_splitncnn_0 model_36/tf.strided_slice/StridedSlice model_36/tf.math.subtract/Sub 0=1
+Split            splitncnn_34             1 2 model_36/tf.math.subtract/Sub model_36/tf.math.subtract/Sub_splitncnn_0 model_36/tf.math.subtract/Sub_splitncnn_1
+BinaryOp         model_36/tf.math.subtract_1/Sub 2 1 model_36/tf.math.add_121/Add_splitncnn_1 model_36/tf.math.subtract/Sub_splitncnn_1 model_36/tf.math.subtract_1/Sub 0=1
+BinaryOp         model_36/tf.math.add_122/Add 2 1 model_36/tf.math.subtract/Sub_splitncnn_0 model_36/tf.math.add_121/Add_splitncnn_0 model_36/tf.math.add_122/Add 0=0
+BinaryOp         model_36/tf.math.divide/truediv 1 1 model_36/tf.math.add_122/Add model_36/tf.math.divide/truediv 0=2 1=1 2=5.000000e-01
+Concat           model_36/tf.concat_24/concat 2 1 model_36/tf.math.divide/truediv model_36/tf.math.subtract_1/Sub model_36/tf.concat_24/concat 0=0
+BinaryOp         model_36/tf.math.multiply_351/Mul 2 1 model_36/tf.concat_24/concat arith.constant189 model_36/tf.math.multiply_351/Mul 0=2
+Sigmoid          model_36/tf.math.sigmoid_77/Sigmoid 1 1 model_36/tf.split_10/split1 model_36/tf.math.sigmoid_77/Sigmoid
+Concat           Identity                 2 1 model_36/tf.math.multiply_351/Mul model_36/tf.math.sigmoid_77/Sigmoid Identity 0=0
