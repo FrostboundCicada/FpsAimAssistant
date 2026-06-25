@@ -362,13 +362,13 @@ int TouchInjector::findGyroDevice() {
 
         // 陀螺仪: 支持 EV_ABS + ABS_RX/RY/RZ
         bool has_abs = evbit & (1 << EV_ABS);
-        bool has_rx = absbit & (1 << ABS_RX);
-        bool has_ry = absbit & (1 << ABS_RY);
-        bool has_rz = absbit & (1 << ABS_RZ);
+        bool has_rx = absbit & (1ULL << ABS_RX);
+        bool has_ry = absbit & (1ULL << ABS_RY);
+        bool has_rz = absbit & (1ULL << ABS_RZ);
 
         if (has_abs && (has_rx || has_ry || has_rz)) {
             // 进一步确认不是触摸屏（无 ABS_MT_POSITION_X）
-            bool has_mt = absbit & (1 << ABS_MT_POSITION_X);
+            bool has_mt = absbit & (1ULL << ABS_MT_POSITION_X);
             if (!has_mt) {
                 LOGI("找到陀螺仪设备: %s (RX=%d RY=%d RZ=%d)",
                      path, has_rx, has_ry, has_rz);

@@ -114,9 +114,9 @@ endif()
 target_compile_options(${PROJECT_NAME} PRIVATE
     -O3
     -ffast-math
-    -mfpu=neon
     -fvisibility=hidden
     -fvisibility-inlines-hidden
     -Wall
     -Wno-unused-parameter
+    -Wno-shift-count-overflow
 )

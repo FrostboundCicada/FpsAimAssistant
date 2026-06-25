@@ -22,6 +22,10 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: false
 
+# 必须显式授予 contents: write 权限，否则 GITHUB_TOKEN 无法创建 Release
+permissions:
+  contents: write
+
 jobs:
   build:
     name: 构建 Release APK
