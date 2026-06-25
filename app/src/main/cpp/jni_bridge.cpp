@@ -271,6 +271,25 @@ Java_com_aimassistant_NativeBridge_nativeSetConfig(
 }
 
 // ─────────────────────────────────────────────────────────────
+// 运行时参数调节（悬浮窗实时调用）
+//   sensX/sensY: X/Y 轴灵敏度倍率 (0.1~3.0)
+//   aimRadius:   瞄准半径 (像素)
+//   aimSpeed:    瞄准平滑系数 (0.05~1.0)
+// ─────────────────────────────────────────────────────────────
+JNIEXPORT void JNICALL
+Java_com_aimassistant_NativeBridge_nativeSetRuntimeParams(
+        JNIEnv*, jclass,
+        jfloat sensX, jfloat sensY,
+        jfloat aimRadius, jfloat aimSpeed) {
+    if (!g_pipe.controller) return;
+    AimConfig& c = g_pipe.controller->config();
+    c.sens_x     = sensX > 0.01f ? sensX : 1.0f;
+    c.sens_y     = sensY > 0.01f ? sensY : 1.0f;
+    c.aim_radius = aimRadius > 0.f ? aimRadius : 400.f;
+    c.aim_speed  = aimSpeed > 0.01f ? aimSpeed : 0.35f;
+}
+
+// ─────────────────────────────────────────────────────────────
 // 获取最近一次推理耗时
 // ─────────────────────────────────────────────────────────────
 JNIEXPORT jfloat JNICALL

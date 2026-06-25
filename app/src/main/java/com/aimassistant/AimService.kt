@@ -74,6 +74,14 @@ class AimService : Service() {
     private var currentModelIndex: Int = 0
     @Volatile private var useGpu: Boolean = false
 
+    // 运行时可调参数（悬浮窗实时修改）
+    @Volatile private var confThresh: Float = 0.45f
+    @Volatile private var nmsThresh: Float = 0.45f
+    @Volatile private var sensX: Float = 1.0f
+    @Volatile private var sensY: Float = 1.0f
+    @Volatile private var aimRadius: Float = 400f
+    @Volatile private var aimSpeed: Float = 0.35f
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -139,6 +147,16 @@ class AimService : Service() {
                 override fun onCycleModel(): String? {
                     return switchToNextModel()
                 }
+                override fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
+                                            aimRadius: Float, aimSpeed: Float) {
+                    this@AimService.confThresh = confThresh
+                    this@AimService.sensX = sensX
+                    this@AimService.sensY = sensY
+                    this@AimService.aimRadius = aimRadius
+                    this@AimService.aimSpeed = aimSpeed
+                    // 灵敏度/半径/速度下发到 native（线程安全）
+                    NativeBridge.nativeSetRuntimeParams(sensX, sensY, aimRadius, aimSpeed)
+                }
                 override fun onExit() {
                     Log.i(TAG, "用户请求退出")
                     stopSelf()
@@ -179,9 +197,11 @@ class AimService : Service() {
             Log.e(TAG, "无可用模型，跳过 nativeInit")
         }
         NativeBridge.nativeSetConfig(
-            aimRadius = 400f, aimSpeed = 0.35f, leadFactor = 1f,
+            aimRadius = aimRadius, aimSpeed = aimSpeed, leadFactor = 1f,
             pipelineMs = 50f, headshot = false, trigger = trigger
         )
+        // 同步初始灵敏度到 native（sens_x/sens_y 默认 1.0）
+        NativeBridge.nativeSetRuntimeParams(sensX, sensY, aimRadius, aimSpeed)
 
         // 6. 屏幕捕获: 优先 SurfaceControl，失败回退 MediaProjection
         capture = when (captureMode) {
@@ -283,7 +303,7 @@ class AimService : Service() {
         if (loopJob?.isActive == true) return  // 串行化，避免积压
         loopJob = scope.launch {
             // 推理
-            val dets = NativeBridge.nativeDetect(buffer, width, height, 0.45f, 0.45f)
+            val dets = NativeBridge.nativeDetect(buffer, width, height, confThresh, nmsThresh)
             val infMs = NativeBridge.nativeGetInferenceMs()
 
             // 解析检测框

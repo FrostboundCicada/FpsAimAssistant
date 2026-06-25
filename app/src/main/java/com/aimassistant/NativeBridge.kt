@@ -96,6 +96,19 @@ object NativeBridge {
         pipelineMs: Float, headshot: Boolean, trigger: Boolean
     )
 
+    /**
+     * 运行时参数调节（悬浮窗实时调用，线程安全）。
+     *
+     * @param sensX     X 轴灵敏度倍率 (0.1~3.0)
+     * @param sensY     Y 轴灵敏度倍率 (0.1~3.0)
+     * @param aimRadius 瞄准半径 (像素, 50~1000)
+     * @param aimSpeed  瞄准平滑系数 (0.05~1.0)
+     */
+    external fun nativeSetRuntimeParams(
+        sensX: Float, sensY: Float,
+        aimRadius: Float, aimSpeed: Float
+    )
+
     /** 最近一次推理耗时（毫秒）。 */
     external fun nativeGetInferenceMs(): Float
 

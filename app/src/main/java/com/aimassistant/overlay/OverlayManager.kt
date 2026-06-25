@@ -12,6 +12,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import com.aimassistant.util.DriverProbe
@@ -46,6 +47,9 @@ class OverlayManager(private val context: Context) {
         fun onTestModeToggled(enabled: Boolean)
         /** 请求切换到下一个模型，返回新的模型名（失败返回 null）。 */
         fun onCycleModel(): String?
+        /** 运行时参数被调节（置信度/灵敏度/半径/速度）。 */
+        fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
+                            aimRadius: Float, aimSpeed: Float)
         /** 请求退出服务。 */
         fun onExit()
     }
@@ -92,6 +96,10 @@ class OverlayManager(private val context: Context) {
                         controlView?.updateModel(newModel)
                     }
                     return newModel
+                }
+                override fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
+                                            aimRadius: Float, aimSpeed: Float) {
+                    listener?.onParamsChanged(confThresh, sensX, sensY, aimRadius, aimSpeed)
                 }
                 override fun onExit() {
                     listener?.onExit()
@@ -258,6 +266,8 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
     interface Listener {
         fun onTestModeToggled(enabled: Boolean)
         fun onCycleModel(): String?
+        fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
+                            aimRadius: Float, aimSpeed: Float)
         fun onExit()
     }
 
@@ -269,6 +279,15 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
     private val modelBtn: Button
     private val testSwitch: SwitchCompat
     private val exitBtn: Button
+    private val paramsToggle: Button
+    private val paramsContainer: LinearLayout
+
+    // 当前参数值（与 AimService 默认值一致）
+    private var pConfThresh = 0.45f
+    private var pSensX = 1.0f
+    private var pSensY = 1.0f
+    private var pAimRadius = 400f
+    private var pAimSpeed = 0.35f
 
     init {
         orientation = VERTICAL
@@ -325,6 +344,55 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
         testRow.addView(testSwitch)
         addView(testRow)
 
+        // 参数控制折叠区
+        paramsToggle = Button(context).apply {
+            text = "▶ 参数调节"
+            setOnClickListener {
+                val visible = paramsContainer.visibility != View.VISIBLE
+                paramsContainer.visibility = if (visible) View.VISIBLE else View.GONE
+                text = if (visible) "▼ 参数调节" else "▶ 参数调节"
+            }
+            textSize = 12f
+            setBackgroundColor(Color.TRANSPARENT)
+            setTextColor(Color.parseColor("#00E5FF"))
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
+                topMargin = 4
+            }
+        }
+        addView(paramsToggle)
+
+        paramsContainer = LinearLayout(context).apply {
+            orientation = VERTICAL
+            visibility = View.GONE  // 默认折叠
+            setPadding(4, 4, 4, 4)
+        }
+        // 置信度: 0.10~0.90 (progress 10~90, /100)
+        addParamSlider("置信度", 10, 90, (pConfThresh * 100).toInt()) { progress ->
+            pConfThresh = progress / 100f
+            notifyParamsChanged()
+        }
+        // X灵敏度: 0.1~3.0 (progress 10~300, /100)
+        addParamSlider("X灵敏度", 10, 300, (pSensX * 100).toInt()) { progress ->
+            pSensX = progress / 100f
+            notifyParamsChanged()
+        }
+        // Y灵敏度: 0.1~3.0
+        addParamSlider("Y灵敏度", 10, 300, (pSensY * 100).toInt()) { progress ->
+            pSensY = progress / 100f
+            notifyParamsChanged()
+        }
+        // 瞄准半径: 50~1000
+        addParamSlider("瞄准半径", 50, 1000, pAimRadius.toInt()) { progress ->
+            pAimRadius = progress.toFloat()
+            notifyParamsChanged()
+        }
+        // 瞄准速度: 0.05~1.0 (progress 5~100, /100)
+        addParamSlider("瞄准速度", 5, 100, (pAimSpeed * 100).toInt()) { progress ->
+            pAimSpeed = progress / 100f
+            notifyParamsChanged()
+        }
+        addView(paramsContainer)
+
         // 模型切换按钮
         modelBtn = Button(context).apply {
             text = "模型: —"
@@ -355,6 +423,72 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
         // 标题栏拖动
         setupDrag(titleText)
         setupDrag(statusText)
+    }
+
+    /** 添加一个参数滑块行: 标签 + 数值 + SeekBar。 */
+    private fun addParamSlider(
+        label: String, min: Int, max: Int, default: Int,
+        onChange: (progress: Int) -> Unit
+    ) {
+        val row = LinearLayout(context).apply {
+            orientation = VERTICAL
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
+                topMargin = 6
+            }
+        }
+        val labelRow = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val labelText = TextView(context).apply {
+            text = label
+            setTextColor(Color.parseColor("#E0E0E0"))
+            textSize = 11f
+            layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val valueText = TextView(context).apply {
+            text = formatSliderValue(label, default)
+            setTextColor(Color.parseColor("#00E5FF"))
+            textSize = 11f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        labelRow.addView(labelText)
+        labelRow.addView(valueText)
+        row.addView(labelRow)
+
+        val seekBar = SeekBar(context).apply {
+            this.max = max - min
+            progress = default - min
+            // 面板宽度有限，限制 SeekBar 宽度
+            layoutParams = LayoutParams(240, LayoutParams.WRAP_CONTENT)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                    if (fromUser) {
+                        val realProgress = p + min
+                        valueText.text = formatSliderValue(label, realProgress)
+                        onChange(realProgress)
+                    }
+                }
+                override fun onStartTrackingTouch(sb: SeekBar?) {}
+                override fun onStopTrackingTouch(sb: SeekBar?) {}
+            })
+        }
+        row.addView(seekBar)
+        paramsContainer.addView(row)
+    }
+
+    /** 根据参数类型格式化显示值。 */
+    private fun formatSliderValue(label: String, progress: Int): String {
+        return when (label) {
+            "置信度" -> "%.2f".format(progress / 100f)
+            "X灵敏度", "Y灵敏度", "瞄准速度" -> "%.2f".format(progress / 100f)
+            "瞄准半径" -> "$progress"
+            else -> progress.toString()
+        }
+    }
+
+    private fun notifyParamsChanged() {
+        listener?.onParamsChanged(pConfThresh, pSensX, pSensY, pAimRadius, pAimSpeed)
     }
 
     private fun createPanelBg(): android.graphics.drawable.Drawable {

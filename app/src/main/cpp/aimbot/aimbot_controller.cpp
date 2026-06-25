@@ -139,6 +139,9 @@ void AimbotController::aimOnce(float aim_x, float aim_y) {
     float cy2 = aim_y + dy * 0.66f + perp_y * arc_amp * arc_sign * 0.5f;
 
     int steps = 8 + (int)(dist / 50.f);
+    // 灵敏度越高 -> 步数越少 -> 移动越快（触摸后端用 x/y 平均值）
+    float sens_avg = (cfg_.sens_x + cfg_.sens_y) * 0.5f;
+    if (sens_avg > 0.01f) steps = (int)(steps / sens_avg);
     if (steps > 20) steps = 20;
     if (steps < 6) steps = 6;
 
@@ -217,9 +220,9 @@ void AimbotController::gyroAim(float dx, float dy) {
     float angle_offset_x = dx / cfg_.pixels_per_degree_x;  // 度
     float angle_offset_y = dy / cfg_.pixels_per_degree_y;  // 度
 
-    // 应用动态速度
-    float target_ry = angle_offset_x * speed_factor * 2.f * cfg_.gyro_sensitivity;
-    float target_rx = -angle_offset_y * speed_factor * 2.f * cfg_.gyro_sensitivity;
+    // 应用动态速度 + X/Y 轴灵敏度倍率
+    float target_ry = angle_offset_x * speed_factor * 2.f * cfg_.gyro_sensitivity * cfg_.sens_x;
+    float target_rx = -angle_offset_y * speed_factor * 2.f * cfg_.gyro_sensitivity * cfg_.sens_y;
     float target_rz = 0.f;
 
     // 限制最大角速度

@@ -23,6 +23,10 @@ struct AimConfig {
     bool  trigger_enabled = false;  // 是否启用自动注入
     // 陀螺仪参数
     float gyro_sensitivity = 1.0f;
+    // X/Y 轴灵敏度倍率（悬浮窗实时调节，0.1~3.0）
+    // 陀螺仪: 分别缩放 x/y 角速度; 触摸: 平均值缩放注入步数（速度）
+    float sens_x = 1.0f;
+    float sens_y = 1.0f;
 
     // ── 参考 RookieAI 的动态速度算法 ──────────────────
     float near_speed_multiplier = 2.0f;  // 近距离速度倍率（最大速度 = base * multiplier）
