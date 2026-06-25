@@ -1,0 +1,11 @@
+将 YOLOv8n 模型文件放在此目录:
+  - yolov8n.param
+  - yolov8n.bin
+
+获取方式:
+  1. 使用 Ultralytics 训练/导出 YOLOv8n:
+       yolo export model=yolov8n.pt format=ncnn imgsz=640
+  2. 或从 NCNN 官方 model zoo 下载已转换的 yolov8n。
+
+注意: 模型输入名需为 "in0"，输出名需为 "out0"（PNNX 转换默认）。
+若不同，请修改 yolo_v8.cpp 中 ex.input/extract 的 blob 名。

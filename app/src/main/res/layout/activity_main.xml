@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="准备就绪"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="屏幕捕获后端"
+            android:textStyle="bold" />
+
+        <RadioGroup
+            android:id="@+id/captureModeGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/rbSurfaceControl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="SurfaceControl（低延迟，无需授权）" />
+
+            <RadioButton
+                android:id="@+id/rbMediaProjection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MediaProjection（兼容性好）" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="触摸注入后端（反检测强度）"
+            android:textStyle="bold" />
+
+        <RadioGroup
+            android:id="@+id/injectBackendGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/rbInjectAuto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="自动探测（内核驱动→陀螺仪→uinput）" />
+
+            <RadioButton
+                android:id="@+id/rbInjectKernel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="内核驱动（aim_touch/zero/qx/rt，最难检测）" />
+
+            <RadioButton
+                android:id="@+id/rbInjectGyro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="陀螺仪注入（无触摸事件，需游戏支持陀螺仪瞄准）" />
+
+            <RadioButton
+                android:id="@+id/rbInjectUinput"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="uinput（加固伪装版，兼容性好）" />
+        </RadioGroup>
+
+        <CheckBox
+            android:id="@+id/useGpuCheck"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="使用 Vulkan GPU 推理" />
+
+        <CheckBox
+            android:id="@+id/autoFireCheck"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="自动开火检测（检测开火时触发瞄准）" />
+
+        <Button
+            android:id="@+id/startBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="启动辅助" />
+
+    </LinearLayout>
+</ScrollView>
