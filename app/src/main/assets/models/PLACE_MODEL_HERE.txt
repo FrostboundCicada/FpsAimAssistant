@@ -1,11 +1,33 @@
-将 YOLOv8n 模型文件放在此目录:
-  - yolov8n.param
-  - yolov8n.bin
+此目录存放 NCNN 模型文件对（.param + .bin），可选配同名 .json 元数据文件。
 
-获取方式:
-  1. 使用 Ultralytics 训练/导出 YOLOv8n:
-       yolo export model=yolov8n.pt format=ncnn imgsz=640
-  2. 或从 NCNN 官方 model zoo 下载已转换的 yolov8n。
+## 内置模型
 
-注意: 模型输入名需为 "in0"，输出名需为 "out0"（PNNX 转换默认）。
-若不同，请修改 yolo_v8.cpp 中 ex.input/extract 的 blob 名。
+| 文件前缀 | 说明 | 输入 | 类别数 | 输出格式 |
+|---|---|---|---|---|
+| `dawan_v11s_256` | 用户自训练 YOLOv8s，FPS 游戏人物检测 | 256 | 7 | 已解码 [N, 4+7] |
+| `yolov8n_coco80` | NCNN 官方 yolov8n，通用 COCO 80 类（person=0） | 640 | 80 | 原始 DFL [N, 64+80] |
+
+## 添加新模型
+
+1. 将 `.param` 和 `.bin` 放入此目录（文件名前缀一致，如 `my_model.param` / `my_model.bin`）。
+2. （推荐）创建同名 `.json` 元数据文件描述模型参数：
+
+```json
+{
+  "name": "显示名称",
+  "input_size": 640,
+  "input_blob": "in0",
+  "output_blob": "out0",
+  "num_classes": 80,
+  "format": "dfl_raw",
+  "bbox_xywh": false
+}
+```
+
+字段说明:
+- `format`: `"dfl_raw"`（需 DFL 解码）或 `"decoded"`（输出已是 xyxy + sigmoid 类别）
+- `bbox_xywh`: 仅 `decoded` 格式生效，true 表示 bbox 是 [cx,cy,w,h] 而非 [x1,y1,x2,y2]
+
+未提供 .json 时使用默认值: input_size=640, input_blob="in0", output_blob="out0", num_classes=80, format="dfl_raw"。
+
+应用启动后悬浮窗可随时切换已加载的模型。

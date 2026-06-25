@@ -1,0 +1,10 @@
+{
+  "name": "Dawan v11s (FPS 人物检测)",
+  "input_size": 256,
+  "input_blob": "images",
+  "output_blob": "Identity",
+  "num_classes": 7,
+  "format": "decoded",
+  "bbox_xywh": false,
+  "description": "用户自训练 YOLOv8s 模型，256 输入，7 类，输出已在网内完成 DFL 解码 + sigmoid"
+}

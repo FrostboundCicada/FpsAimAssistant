@@ -12,23 +12,62 @@ object NativeBridge {
         System.loadLibrary("aimassistant")
     }
 
+    /** 模型输出格式: 0=DFL_RAW(需解码), 1=DECODED(已解码 xyxy+sigmoid) */
+    const val FORMAT_DFL_RAW = 0
+    const val FORMAT_DECODED = 1
+
     /**
      * 初始化: 加载 NCNN 模型 + 创建注入设备。
-     * @param paramPath  yolov8n.param 路径（已拷贝到内部存储）
-     * @param binPath    yolov8n.bin 路径
-     * @param useGpu     true=Vulkan, false=CPU(ARM Neon)
-     * @param numThreads CPU 线程数
-     * @param screenW    屏幕宽
-     * @param screenH    屏幕高
-     * @param preferredBackend 优先后端: 0=uinput, 1=内核驱动, 2=陀螺仪, -1=自动探测
+     *
+     * @param paramPath      .param 文件路径（已拷贝到内部存储）
+     * @param binPath        .bin 文件路径
+     * @param useGpu         true=Vulkan, false=CPU(ARM Neon)
+     * @param numThreads     CPU 线程数
+     * @param screenW        屏幕宽
+     * @param screenH        屏幕高
+     * @param preferredBackend 优先后端: 0=uinput, 1=内核驱动, 2=陀螺仪, 3=TwT, -1=自动探测
+     * @param inputBlob      模型输入 blob 名（如 "in0" / "images"）
+     * @param outputBlob     模型输出 blob 名（如 "out0" / "Identity"）
+     * @param inputSize      模型输入尺寸（如 640 / 256）
+     * @param numClasses     类别数
+     * @param formatInt      输出格式: FORMAT_DFL_RAW 或 FORMAT_DECODED
+     * @param bboxXywh       true=bbox 是 [cx,cy,w,h]（仅 DECODED 格式生效）
      * @return true 表示成功
      */
     external fun nativeInit(
         paramPath: String, binPath: String,
         useGpu: Boolean, numThreads: Int,
         screenW: Int, screenH: Int,
-        preferredBackend: Int = -1
+        preferredBackend: Int = -1,
+        inputBlob: String = "in0",
+        outputBlob: String = "out0",
+        inputSize: Int = 640,
+        numClasses: Int = 80,
+        formatInt: Int = FORMAT_DFL_RAW,
+        bboxXywh: Boolean = false
     ): Boolean
+
+    /**
+     * 运行时切换模型（不重启注入器，仅替换 YOLO 推理器）。
+     * 参数含义同 [nativeInit] 中模型相关参数，外加 displayName。
+     * @return true 表示切换成功
+     */
+    external fun nativeLoadModel(
+        paramPath: String, binPath: String,
+        inputBlob: String = "in0",
+        outputBlob: String = "out0",
+        inputSize: Int = 640,
+        numClasses: Int = 80,
+        formatInt: Int = FORMAT_DFL_RAW,
+        bboxXywh: Boolean = false,
+        displayName: String = "model"
+    ): Boolean
+
+    /**
+     * 查询当前已加载模型信息。
+     * @return String[6] = {name, input_size, num_classes, format, input_blob, output_blob}
+     */
+    external fun nativeGetLoadedModelInfo(): Array<String>
 
     /**
      * 对一帧 RGBA 数据进行检测。

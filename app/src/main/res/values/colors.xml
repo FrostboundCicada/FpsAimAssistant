@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色调: 深空蓝 + 荧光青强调 -->
+    <color name="bg_primary">#0F1117</color>
+    <color name="bg_surface">#1A1D29</color>
+    <color name="bg_surface_variant">#232735</color>
+    <color name="bg_card">#1E2230</color>
+
+    <color name="accent_primary">#00E5FF</color>
+    <color name="accent_secondary">#39FF14</color>
+    <color name="accent_warning">#FFC107</color>
+    <color name="accent_danger">#FF3B30</color>
+
+    <color name="text_primary">#F5F7FA</color>
+    <color name="text_secondary">#A0A6B8</color>
+    <color name="text_tertiary">#6B7280</color>
+
+    <color name="divider">#2A2E3C</color>
+
+    <!-- 状态指示色 -->
+    <color name="status_ok">#39FF14</color>
+    <color name="status_warn">#FFC107</color>
+    <color name="status_error">#FF3B30</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.aimassistant.capture.FrameCapture
@@ -17,6 +18,8 @@ import com.aimassistant.capture.ScreenCapture
 import com.aimassistant.capture.SurfaceControlCapture
 import com.aimassistant.overlay.OverlayManager
 import com.aimassistant.trigger.FireDetector
+import com.aimassistant.util.DriverProbe
+import com.aimassistant.util.ModelManager
 import com.aimassistant.util.RootUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,10 +37,13 @@ import java.nio.ByteBuffer
  *   2. 将 resultCode + Intent 通过 startForegroundService 传入
  *
  * 生命周期内持续推理，悬浮窗实时显示检测框与 FPS。
+ * 启动时执行驱动检测，结果通过悬浮窗控制面板展示。
+ * 支持运行时通过悬浮窗切换模型 / 开关测试模式。
  */
 class AimService : Service() {
 
     companion object {
+        private const val TAG = "AimService"
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_RESULT_DATA = "result_data"
         const val EXTRA_USE_GPU = "use_gpu"
@@ -48,6 +54,8 @@ class AimService : Service() {
         const val EXTRA_AUTO_FIRE = "auto_fire"
         /** 注入后端: 0=uinput, 1=内核驱动, 2=陀螺仪, -1=自动探测 */
         const val EXTRA_INJECT_BACKEND = "inject_backend"
+        /** 初始模型 key（ModelManager.ModelInfo.key），未指定时用列表第一个 */
+        const val EXTRA_INITIAL_MODEL_KEY = "initial_model_key"
         private const val CHANNEL_ID = "aim_service"
         private const val NOTIF_ID = 1
     }
@@ -60,6 +68,11 @@ class AimService : Service() {
     private lateinit var overlay: OverlayManager
     private var fireDetector: FireDetector? = null
     private var initialized = false
+
+    // 模型管理
+    private var availableModels: List<ModelManager.ModelInfo> = emptyList()
+    private var currentModelIndex: Int = 0
+    @Volatile private var useGpu: Boolean = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -74,15 +87,19 @@ class AimService : Service() {
             val captureMode = intent.getStringExtra(EXTRA_CAPTURE_MODE) ?: "mediaprojection"
             val autoFire = intent.getBooleanExtra(EXTRA_AUTO_FIRE, false)
             val injectBackend = intent.getIntExtra(EXTRA_INJECT_BACKEND, -1)
-            startPipeline(resultCode, data, useGpu, trigger, captureMode, autoFire, injectBackend)
+            val initialModelKey = intent.getStringExtra(EXTRA_INITIAL_MODEL_KEY)
+            startPipeline(resultCode, data, useGpu, trigger, captureMode, autoFire, injectBackend, initialModelKey)
         }
         return START_STICKY
     }
 
     private fun startPipeline(
         resultCode: Int, data: Intent?, useGpu: Boolean, trigger: Boolean,
-        captureMode: String, autoFire: Boolean, injectBackend: Int
+        captureMode: String, autoFire: Boolean, injectBackend: Int,
+        initialModelKey: String?
     ) {
+        this.useGpu = useGpu
+
         // 1. 屏幕分辨率
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val dm = DisplayMetrics()
@@ -91,41 +108,90 @@ class AimService : Service() {
         val screenW = dm.widthPixels
         val screenH = dm.heightPixels
 
-        // 2. 拷贝模型到内部存储
-        val paramFile = RootUtil.copyAssetToFile(this, "models/yolov8n.param")
-        val binFile = RootUtil.copyAssetToFile(this, "models/yolov8n.bin")
+        // 2. 扫描可用模型
+        availableModels = ModelManager.scanModels(this)
+        if (availableModels.isEmpty()) {
+            Log.e(TAG, "未找到任何模型文件，请将 .param/.bin 放入 assets/models/")
+        }
+        // 选择初始模型
+        currentModelIndex = if (initialModelKey != null) {
+            availableModels.indexOfFirst { it.key == initialModelKey }.let { if (it < 0) 0 else it }
+        } else 0
+        val initialModel = availableModels.getOrNull(currentModelIndex)
 
-        // 3. 初始化原生层（加载模型 + 创建注入设备）
-        //    注入后端自动探测: 内核驱动 -> 陀螺仪 -> uinput
-        //    injectBackend: 0=uinput, 1=内核驱动, 2=陀螺仪, -1=自动
-        val ok = NativeBridge.nativeInit(
-            paramFile.absolutePath, binFile.absolutePath,
-            useGpu, 4, screenW, screenH,
-            preferredBackend = injectBackend
-        )
-        if (!ok) {
-            android.util.Log.e("AimService", "nativeInit 失败，请检查模型文件与 Root 权限")
+        // 3. 驱动检测（在推理启动前执行）
+        val driverReport = try {
+            DriverProbe.probe()
+        } catch (e: Exception) {
+            Log.w(TAG, "驱动检测异常: ${e.message}")
+            null
+        }
+        Log.i(TAG, "驱动检测: ${driverReport?.let { if (it.anyAvailable) "可用" else "不可用" } ?: "失败"}")
+
+        // 4. 悬浮窗（先创建，便于显示后续状态）
+        overlay = OverlayManager(this).also { ov ->
+            ov.show()
+            ov.listener = object : OverlayManager.Listener {
+                override fun onTestModeToggled(enabled: Boolean) {
+                    Log.i(TAG, "测试模式: ${if (enabled) "开" else "关"}")
+                    // 测试模式仅影响 UI 显示，无需通知 native
+                }
+                override fun onCycleModel(): String? {
+                    return switchToNextModel()
+                }
+                override fun onExit() {
+                    Log.i(TAG, "用户请求退出")
+                    stopSelf()
+                }
+            }
+            // 显示驱动检测结果
+            driverReport?.let { ov.setDriverReport(it) }
+        }
+
+        // 5. 初始化原生层（加载模型 + 创建注入设备）
+        if (initialModel != null) {
+            val paramFile = RootUtil.copyAssetToFile(this, initialModel.paramAsset)
+            val binFile = RootUtil.copyAssetToFile(this, initialModel.binAsset)
+            val ok = NativeBridge.nativeInit(
+                paramPath = paramFile.absolutePath,
+                binPath = binFile.absolutePath,
+                useGpu = useGpu,
+                numThreads = 4,
+                screenW = screenW,
+                screenH = screenH,
+                preferredBackend = injectBackend,
+                inputBlob = initialModel.inputBlob,
+                outputBlob = initialModel.outputBlob,
+                inputSize = initialModel.inputSize,
+                numClasses = initialModel.numClasses,
+                formatInt = initialModel.formatInt,
+                bboxXywh = initialModel.bboxXywh
+            )
+            if (!ok) {
+                Log.e(TAG, "nativeInit 失败，请检查模型文件与 Root 权限")
+            } else {
+                overlay.setModelName(initialModel.displayName)
+                val backendName = NativeBridge.nativeGetBackendName()
+                overlay.setBackendName(backendName)
+                Log.i(TAG, "初始模型: ${initialModel.displayName}, 注入后端: $backendName")
+            }
         } else {
-            val backendName = NativeBridge.nativeGetBackendName()
-            android.util.Log.i("AimService", "注入后端: $backendName")
+            Log.e(TAG, "无可用模型，跳过 nativeInit")
         }
         NativeBridge.nativeSetConfig(
             aimRadius = 400f, aimSpeed = 0.35f, leadFactor = 1f,
             pipelineMs = 50f, headshot = false, trigger = trigger
         )
 
-        // 4. 悬浮窗
-        overlay = OverlayManager(this).also { it.show() }
-
-        // 5. 屏幕捕获: 优先 SurfaceControl，失败回退 MediaProjection
+        // 6. 屏幕捕获: 优先 SurfaceControl，失败回退 MediaProjection
         capture = when (captureMode) {
             "surfacecontrol" -> {
                 val sc = SurfaceControlCapture(this)
                 if (sc.isAvailable()) {
-                    android.util.Log.i("AimService", "使用 SurfaceControl 捕获")
+                    Log.i(TAG, "使用 SurfaceControl 捕获")
                     sc
                 } else {
-                    android.util.Log.w("AimService", "SurfaceControl 不可用，回退到 MediaProjection")
+                    Log.w(TAG, "SurfaceControl 不可用，回退到 MediaProjection")
                     createMediaProjectionCapture(resultCode, data)
                 }
             }
@@ -134,24 +200,62 @@ class AimService : Service() {
         capture?.onFrame = { buffer, w, h -> onFrame(buffer, w, h) }
         val started = capture?.start() ?: false
         if (!started) {
-            android.util.Log.e("AimService", "屏幕捕获启动失败")
+            Log.e(TAG, "屏幕捕获启动失败")
         }
 
-        // 6. 开火检测器（自动触发瞄准）
+        // 7. 开火检测器（自动触发瞄准）
         if (autoFire) {
             fireDetector = FireDetector(screenW, screenH).also { fd ->
                 fd.onFire = { onFireDetected() }
                 fd.start(autoAimEnabled = true)
             }
-            android.util.Log.i("AimService", "开火检测已启用")
+            Log.i(TAG, "开火检测已启用")
         }
 
-        // 7. 唤醒锁，保持推理
+        // 8. 唤醒锁，保持推理
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AimAssistant::Loop")
         wakeLock?.acquire(10 * 60 * 1000L)  // 10 分钟
 
         initialized = true
+    }
+
+    /** 切换到下一个可用模型。返回新模型显示名，失败返回 null。 */
+    private fun switchToNextModel(): String? {
+        if (availableModels.isEmpty()) return null
+        val nextIndex = (currentModelIndex + 1) % availableModels.size
+        val nextModel = availableModels[nextIndex]
+        val paramFile = try {
+            RootUtil.copyAssetToFile(this, nextModel.paramAsset)
+        } catch (e: Exception) {
+            Log.e(TAG, "拷贝模型 param 失败: ${e.message}")
+            return null
+        }
+        val binFile = try {
+            RootUtil.copyAssetToFile(this, nextModel.binAsset)
+        } catch (e: Exception) {
+            Log.e(TAG, "拷贝模型 bin 失败: ${e.message}")
+            return null
+        }
+        val ok = NativeBridge.nativeLoadModel(
+            paramPath = paramFile.absolutePath,
+            binPath = binFile.absolutePath,
+            inputBlob = nextModel.inputBlob,
+            outputBlob = nextModel.outputBlob,
+            inputSize = nextModel.inputSize,
+            numClasses = nextModel.numClasses,
+            formatInt = nextModel.formatInt,
+            bboxXywh = nextModel.bboxXywh,
+            displayName = nextModel.displayName
+        )
+        if (!ok) {
+            Log.e(TAG, "切换模型失败: ${nextModel.displayName}")
+            return null
+        }
+        currentModelIndex = nextIndex
+        overlay.setModelName(nextModel.displayName)
+        Log.i(TAG, "已切换模型: ${nextModel.displayName}")
+        return nextModel.displayName
     }
 
     /** 创建 MediaProjection 捕获实例（需授权结果）。 */
@@ -164,7 +268,6 @@ class AimService : Service() {
 
     /** 开火检测回调: 触发一次瞄准注入。 */
     private fun onFireDetected() {
-        // 使用屏幕中心作为瞄准起点
         val w = capture?.width ?: return
         val h = capture?.height ?: return
         NativeBridge.nativeAimOnce(w / 2f, h / 2f)
@@ -175,7 +278,6 @@ class AimService : Service() {
     private var currentFps = 0f
 
     private fun onFrame(buffer: ByteBuffer, width: Int, height: Int) {
-        // 喂给开火检测器（亮度尖峰检测，非阻塞）
         fireDetector?.feedFrame(buffer, width, height)
 
         if (loopJob?.isActive == true) return  // 串行化，避免积压
@@ -205,21 +307,15 @@ class AimService : Service() {
             if (bestIdx in boxes.indices) {
                 val b = boxes[bestIdx]
                 boxes[bestIdx] = b.copy(selected = true)
-                // 计算目标相对准星的偏移
                 val targetCx = (b.x1 + b.x2) / 2f
                 val targetCy = (b.y1 + b.y2) / 2f
                 val dx = targetCx - cx
                 val dy = targetCy - cy
 
-                // 根据后端选择注入方式:
-                //   - 陀螺仪后端: 每帧持续微调（无触摸事件）
-                //   - 触摸后端: 仅在无开火检测器时自动注入
                 val backendName = NativeBridge.nativeGetBackendName()
                 if (backendName.contains("陀螺仪")) {
-                    // 陀螺仪: 每帧微调，无需开火触发
                     NativeBridge.nativeGyroAim(dx, dy)
                 } else if (fireDetector == null) {
-                    // 触摸注入: 开火检测器启用时由 onFireDetected() 触发
                     NativeBridge.nativeAimOnce(cx, cy)
                 }
             }
@@ -233,7 +329,7 @@ class AimService : Service() {
                 lastFpsTime = now
             }
 
-            // 更新悬浮窗（切到主线程）
+            // 更新悬浮窗
             overlay.updateDetections(boxes, currentFps, infMs)
         }
     }

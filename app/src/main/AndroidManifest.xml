@@ -21,7 +21,7 @@
         android:label="AimAssistant"
         android:supportsRtl="true"
         android:hardwareAccelerated="true"
-        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:theme="@style/Theme.AimAssistant"
         tools:targetApi="34">
 
         <activity

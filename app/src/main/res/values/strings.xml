@@ -1,3 +1,55 @@
 <resources>
     <string name="app_name">AimAssistant</string>
+
+    <!-- 主界面 -->
+    <string name="title_main">AimAssistant</string>
+    <string name="subtitle_main">YOLO 视觉辅助 · 多后端注入</string>
+
+    <!-- 状态卡片 -->
+    <string name="section_status">运行环境状态</string>
+    <string name="status_root">Root 权限</string>
+    <string name="status_overlay">悬浮窗权限</string>
+    <string name="status_surfacecontrol">SurfaceControl</string>
+    <string name="status_resolution">屏幕分辨率</string>
+
+    <!-- 驱动检测卡片 -->
+    <string name="section_driver">驱动检测</string>
+    <string name="driver_kernel">内核驱动</string>
+    <string name="driver_twt">TwT 驱动</string>
+    <string name="driver_gyro">陀螺仪</string>
+    <string name="driver_uinput">uinput</string>
+    <string name="driver_probe">重新检测</string>
+    <string name="driver_none">未检测到任何可用注入后端</string>
+
+    <!-- 模型卡片 -->
+    <string name="section_model">检测模型</string>
+    <string name="model_hint">选择启动时加载的模型（运行时可在悬浮窗切换）</string>
+    <string name="model_empty">未找到模型文件，请将 .param/.bin 放入 assets/models/</string>
+
+    <!-- 捕获后端 -->
+    <string name="section_capture">屏幕捕获后端</string>
+    <string name="capture_surfacecontrol">SurfaceControl（低延迟，无需授权）</string>
+    <string name="capture_mediaprojection">MediaProjection（兼容性好）</string>
+
+    <!-- 注入后端 -->
+    <string name="section_inject">触摸注入后端</string>
+    <string name="inject_twt">TwT 驱动（syscall+ioctl，支持陀螺仪直改）</string>
+    <string name="inject_kernel">内核驱动（aim_touch/zero/qx/rt）</string>
+    <string name="inject_gyro">陀螺仪注入（无触摸事件）</string>
+    <string name="inject_uinput">uinput（加固伪装版）</string>
+
+    <!-- 选项 -->
+    <string name="option_gpu">使用 Vulkan GPU 推理</string>
+    <string name="option_autofire">自动开火检测（检测开火时触发瞄准）</string>
+
+    <!-- 启动 -->
+    <string name="btn_start">启动辅助</string>
+    <string name="toast_starting">AimService 已启动</string>
+    <string name="toast_overlay_required">请授予悬浮窗权限后重试</string>
+    <string name="toast_no_root">未检测到 Root，触摸注入将不可用</string>
+
+    <!-- 状态指示 -->
+    <string name="state_ok">可用</string>
+    <string name="state_fail">不可用</string>
+    <string name="state_unknown">未知</string>
 </resources>

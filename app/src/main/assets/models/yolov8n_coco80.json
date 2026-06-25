@@ -1,0 +1,10 @@
+{
+  "name": "YOLOv8n COCO80 (通用)",
+  "input_size": 640,
+  "input_blob": "in0",
+  "output_blob": "out0",
+  "num_classes": 80,
+  "format": "dfl_raw",
+  "bbox_xywh": false,
+  "description": "NCNN 官方 yolov8n 模型，COCO 80 类（person=0），输出为原始 DFL 格式需自行解码"
+}
