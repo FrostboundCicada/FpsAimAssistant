@@ -105,7 +105,7 @@ class ScreenCapture(private val context: Context) : FrameCapture {
         return compact
     }
 
-    fun stop() {
+    override fun stop() {
         virtualDisplay?.release()
         virtualDisplay = null
         imageReader?.setOnImageAvailableListener(null, null)
