@@ -58,12 +58,37 @@ target_link_libraries(${PROJECT_NAME}
 
 # ─────────────────────────────────────────────────────────────
 # NCNN 静态库（若存在则链接，否则编译期给出友好提示）
+# NCNN Vulkan 版依赖 glslang + SPIRV（用于 GPU shader 编译）和 OpenMP
 # ─────────────────────────────────────────────────────────────
-if(EXISTS "${NCNN_DIR}/arm64-v8a/lib/libncnn.a")
-    target_link_libraries(${PROJECT_NAME} ${NCNN_DIR}/arm64-v8a/lib/libncnn.a)
+set(NCNN_LIB_DIR ${NCNN_DIR}/arm64-v8a/lib)
+
+if(EXISTS "${NCNN_LIB_DIR}/libncnn.a")
+    # NCNN 本体
+    target_link_libraries(${PROJECT_NAME} ${NCNN_LIB_DIR}/libncnn.a)
+
+    # glslang + SPIRV（Vulkan 后端 shader 编译器，NCNN Vulkan 包自带）
+    if(EXISTS "${NCNN_LIB_DIR}/libglslang.a")
+        target_link_libraries(${PROJECT_NAME}
+            ${NCNN_LIB_DIR}/libglslang.a
+            ${NCNN_LIB_DIR}/libSPIRV.a)
+        message(STATUS "NCNN: 链接 glslang + SPIRV")
+    endif()
+
+    # OpenMP 运行时（NCNN 用 OpenMP 做多线程）
+    # NDK 自带 libomp，使用 -static-openmp 静态链接
+    find_package(OpenMP QUIET)
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+        message(STATUS "NCNN: 链接系统 OpenMP")
+    else()
+        target_link_options(${PROJECT_NAME} PRIVATE -static-openmp)
+        target_link_libraries(${PROJECT_NAME} omp)
+        message(STATUS "NCNN: 链接 NDK OpenMP (static)")
+    endif()
+
     message(STATUS "NCNN: 已找到预编译库，启用 NCNN 推理")
 else()
-    message(WARNING "NCNN: 未找到 ${NCNN_DIR}/arm64-v8a/lib/libncnn.a，"
+    message(WARNING "NCNN: 未找到 ${NCNN_LIB_DIR}/libncnn.a，"
                     "请下载 ncnn-android-vulkan 并放入 cpp/ncnn-android-vulkan/")
 endif()
 
