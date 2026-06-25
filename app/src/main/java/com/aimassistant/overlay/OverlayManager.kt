@@ -35,6 +35,11 @@ class OverlayManager(private val context: Context) {
 
     companion object {
         private const val TAG = "OverlayManager"
+
+        // 自瞄模式（TwT 驱动同时支持触摸与陀螺仪，故需可切换）
+        const val AIM_MODE_AUTO = 0   // 自动：按后端能力选择（陀螺仪后端走陀螺仪，其余走触摸）
+        const val AIM_MODE_TOUCH = 1  // 触摸模式：调用 nativeAimOnce（贝塞尔轨迹注入）
+        const val AIM_MODE_GYRO = 2   // 陀螺仪模式：调用 nativeGyroAim（角速度注入，无触摸特征）
     }
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -52,11 +57,14 @@ class OverlayManager(private val context: Context) {
                             aimRadius: Float, aimSpeed: Float)
         /** 检测范围被调节（宽/高占屏幕比例 0.0~1.0，是否显示）。 */
         fun onDetectionRangeChanged(wRatio: Float, hRatio: Float, visible: Boolean)
+        /** 自瞄模式被切换（AIM_MODE_AUTO / AIM_MODE_TOUCH / AIM_MODE_GYRO）。 */
+        fun onAimModeChanged(mode: Int)
         /** 请求退出服务。 */
         fun onExit()
     }
 
     var listener: Listener? = null
+    @Volatile private var aimMode: Int = AIM_MODE_AUTO
 
     /** 一个检测框（屏幕坐标）。 */
     data class Box(val x1: Float, val y1: Float, val x2: Float, val y2: Float,
@@ -115,6 +123,10 @@ class OverlayManager(private val context: Context) {
                     rangeVisible = visible
                     overlayView?.setDetectionRange(wRatio, hRatio, visible)
                     listener?.onDetectionRangeChanged(wRatio, hRatio, visible)
+                }
+                override fun onAimModeChanged(mode: Int) {
+                    aimMode = mode
+                    listener?.onAimModeChanged(mode)
                 }
                 override fun onExit() {
                     listener?.onExit()
@@ -184,6 +196,15 @@ class OverlayManager(private val context: Context) {
         rangeVisible = visible
         overlayView?.setDetectionRange(rangeWRatio, rangeHRatio, visible)
     }
+
+    /** 设置自瞄模式（AIM_MODE_AUTO / AIM_MODE_TOUCH / AIM_MODE_GYRO）。 */
+    fun setAimMode(mode: Int) {
+        aimMode = mode
+        controlView?.updateAimMode(mode)
+    }
+
+    /** 获取当前自瞄模式。 */
+    fun getAimMode(): Int = aimMode
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -337,6 +358,7 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
         fun onParamsChanged(confThresh: Float, sensX: Float, sensY: Float,
                             aimRadius: Float, aimSpeed: Float)
         fun onDetectionRangeChanged(wRatio: Float, hRatio: Float, visible: Boolean)
+        fun onAimModeChanged(mode: Int)
         fun onExit()
     }
 
@@ -353,6 +375,8 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
     private val rangeToggle: Button
     private val rangeContainer: LinearLayout
     private val rangeVisibleSwitch: SwitchCompat
+    private val aimModeBtn: Button
+    private val aimModeLabel: TextView
 
     // 当前参数值（与 AimService 默认值一致）
     private var pConfThresh = 0.45f
@@ -364,6 +388,8 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
     private var pRangeW = 1.0f
     private var pRangeH = 1.0f
     private var pRangeVisible = true
+    // 自瞄模式（AIM_MODE_AUTO/TOUCH/GYRO），默认自动
+    private var pAimMode: Int = OverlayManager.AIM_MODE_AUTO
 
     init {
         orientation = VERTICAL
@@ -419,6 +445,41 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
         testRow.addView(testLabel)
         testRow.addView(testSwitch)
         addView(testRow)
+
+        // 自瞄模式切换（触摸/陀螺仪/自动）
+        // TwT 驱动同时支持触摸与陀螺仪，故需手动选择注入方式
+        val aimModeRow = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
+                topMargin = 6
+            }
+        }
+        aimModeLabel = TextView(context).apply {
+            text = "自瞄模式"
+            setTextColor(Color.WHITE)
+            textSize = 13f
+            layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
+        }
+        aimModeBtn = Button(context).apply {
+            text = aimModeText(pAimMode)
+            textSize = 11f
+            minWidth = 0
+            minimumWidth = 0
+            setOnClickListener {
+                // 循环切换: AUTO -> TOUCH -> GYRO -> AUTO
+                pAimMode = when (pAimMode) {
+                    OverlayManager.AIM_MODE_AUTO -> OverlayManager.AIM_MODE_TOUCH
+                    OverlayManager.AIM_MODE_TOUCH -> OverlayManager.AIM_MODE_GYRO
+                    else -> OverlayManager.AIM_MODE_AUTO
+                }
+                text = aimModeText(pAimMode)
+                listener?.onAimModeChanged(pAimMode)
+            }
+        }
+        aimModeRow.addView(aimModeLabel)
+        aimModeRow.addView(aimModeBtn)
+        addView(aimModeRow)
 
         // 参数控制折叠区
         paramsToggle = Button(context).apply {
@@ -676,6 +737,19 @@ private class ControlPanelView(context: Context) : LinearLayout(context) {
 
     private fun notifyRangeChanged() {
         listener?.onDetectionRangeChanged(pRangeW, pRangeH, pRangeVisible)
+    }
+
+    /** 自瞄模式显示文本。 */
+    private fun aimModeText(mode: Int): String = when (mode) {
+        OverlayManager.AIM_MODE_TOUCH -> "触摸"
+        OverlayManager.AIM_MODE_GYRO -> "陀螺仪"
+        else -> "自动"
+    }
+
+    /** 外部设置模式时同步按钮显示。 */
+    fun updateAimMode(mode: Int) {
+        pAimMode = mode
+        aimModeBtn.text = aimModeText(mode)
     }
 
     private fun createPanelBg(): android.graphics.drawable.Drawable {

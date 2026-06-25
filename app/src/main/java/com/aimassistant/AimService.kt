@@ -84,6 +84,8 @@ class AimService : Service() {
     // 检测范围（屏幕中心矩形，宽/高占屏幕比例 0.1~1.0，1.0=全屏）
     @Volatile private var rangeWRatio: Float = 1.0f
     @Volatile private var rangeHRatio: Float = 1.0f
+    // 自瞄模式（AUTO/TOUCH/GYRO），TwT 驱动同时支持触摸与陀螺仪，故可手动切换
+    @Volatile private var aimMode: Int = OverlayManager.AIM_MODE_AUTO
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -164,6 +166,14 @@ class AimService : Service() {
                     rangeWRatio = wRatio
                     rangeHRatio = hRatio
                     // 可视化已由 OverlayManager 直接处理，这里仅记录比例用于目标过滤
+                }
+                override fun onAimModeChanged(mode: Int) {
+                    aimMode = mode
+                    Log.i(TAG, "自瞄模式切换: ${when (mode) {
+                        OverlayManager.AIM_MODE_TOUCH -> "触摸"
+                        OverlayManager.AIM_MODE_GYRO -> "陀螺仪"
+                        else -> "自动"
+                    }}")
                 }
                 override fun onExit() {
                     Log.i(TAG, "用户请求退出")
@@ -350,11 +360,26 @@ class AimService : Service() {
                 val dx = targetCx - cx
                 val dy = targetCy - cy
 
-                val backendName = NativeBridge.nativeGetBackendName()
-                if (backendName.contains("陀螺仪")) {
-                    NativeBridge.nativeGyroAim(dx, dy)
-                } else if (fireDetector == null) {
-                    NativeBridge.nativeAimOnce(cx, cy)
+                // 按自瞄模式选择注入方式（TwT 驱动同时支持触摸与陀螺仪）
+                // nativeGyroAim 在不支持的后端会安全 return，nativeAimOnce 同理
+                when (aimMode) {
+                    OverlayManager.AIM_MODE_GYRO -> {
+                        // 陀螺仪模式：注入角速度，无触摸特征
+                        NativeBridge.nativeGyroAim(dx, dy)
+                    }
+                    OverlayManager.AIM_MODE_TOUCH -> {
+                        // 触摸模式：贝塞尔人性化轨迹注入
+                        if (fireDetector == null) NativeBridge.nativeAimOnce(cx, cy)
+                    }
+                    else -> {
+                        // 自动模式：按后端能力选择（陀螺仪后端走陀螺仪，其余走触摸）
+                        val backendName = NativeBridge.nativeGetBackendName()
+                        if (backendName.contains("陀螺仪")) {
+                            NativeBridge.nativeGyroAim(dx, dy)
+                        } else if (fireDetector == null) {
+                            NativeBridge.nativeAimOnce(cx, cy)
+                        }
+                    }
                 }
             }
 
