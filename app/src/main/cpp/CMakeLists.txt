@@ -66,12 +66,28 @@ if(EXISTS "${NCNN_LIB_DIR}/libncnn.a")
     # NCNN 本体
     target_link_libraries(${PROJECT_NAME} ${NCNN_LIB_DIR}/libncnn.a)
 
-    # glslang + SPIRV（Vulkan 后端 shader 编译器，NCNN Vulkan 包自带）
-    if(EXISTS "${NCNN_LIB_DIR}/libglslang.a")
-        target_link_libraries(${PROJECT_NAME}
-            ${NCNN_LIB_DIR}/libglslang.a
-            ${NCNN_LIB_DIR}/libSPIRV.a)
-        message(STATUS "NCNN: 链接 glslang + SPIRV")
+    # glslang + SPIRV 全套（Vulkan 后端 shader 编译器，NCNN Vulkan 包自带）
+    # glslang 拆分为多个静态库，全部链接以解决符号依赖
+    # 顺序很重要：glslang 依赖其他子库
+    set(GLSLANG_LIBS
+        ${NCNN_LIB_DIR}/libglslang.a
+        ${NCNN_LIB_DIR}/libMachineIndependent.a
+        ${NCNN_LIB_DIR}/libGenericCodeGen.a
+        ${NCNN_LIB_DIR}/libOSDependent.a
+        ${NCNN_LIB_DIR}/libglslang-default-resource-limits.a
+        ${NCNN_LIB_DIR}/libSPIRV.a
+        ${NCNN_LIB_DIR}/libOGLCompiler.a
+    )
+    # 仅链接存在的库
+    set(GLSLANG_LINK "")
+    foreach(lib ${GLSLANG_LIBS})
+        if(EXISTS "${lib}")
+            list(APPEND GLSLANG_LINK "${lib}")
+        endif()
+    endforeach()
+    if(GLSLANG_LINK)
+        target_link_libraries(${PROJECT_NAME} ${GLSLANG_LINK})
+        message(STATUS "NCNN: 链接 glslang 全套 (${GLSLANG_LINK})")
     endif()
 
     # OpenMP 运行时（NCNN 用 OpenMP 做多线程）
