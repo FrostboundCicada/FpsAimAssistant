@@ -1,6 +1,6 @@
 # FpsAimAssistant
 
-纯离线 Android FPS 游戏 AI 辅助瞄准工程（Kotlin + JNI + NCNN）。
+纯离线 Android FPS 游戏 AI 辅助瞄准工程（Kotlin + JNI + NCNN）。（纯ai制作游玩）
 
 ## 核心特性
 
